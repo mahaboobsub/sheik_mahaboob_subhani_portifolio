@@ -25,7 +25,7 @@ export default function ContactFooter() {
     setStatusMessage(null);
 
     try {
-      const response = await fetch(`https://formsubmit.co/ajax/${profile.email}`, {
+      const response = await fetch("https://formsubmit.co/ajax/f6a038cb7d8f6b507a10da93a55695b3", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
