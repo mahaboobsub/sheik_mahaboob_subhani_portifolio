@@ -398,7 +398,7 @@ export default function AskAI() {
   };
 
   return (
-    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-24 px-4 sm:px-6 py-24 sm:py-36">
+    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-32 sm:scroll-mt-36 px-4 sm:px-6 py-24 sm:py-36">
       {/* SECTION HEADER */}
       <div className="mb-10 sm:mb-14">
         <p className="text-xs sm:text-sm font-medium tracking-wide text-accent">Autonomous AI Assistant</p>
@@ -408,61 +408,6 @@ export default function AskAI() {
         <p className="mt-3 max-w-[56ch] text-base sm:text-lg text-muted">
           A 4-agent autonomous pipeline grounded in my résumé, real codebases, and case studies. Ask anything about my stack, projects, or background.
         </p>
-      </div>
-
-      {/* MOBILE COMPACT AGENT PIPELINE STRIP (Visible on mobile & tablet) */}
-      <div className="mb-6 block lg:hidden">
-        <div className="rounded-2xl border border-line bg-card p-3 shadow-sm">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[11px] font-semibold text-text flex items-center gap-1.5">
-              <Sparkles size={12} className="text-accent" /> 4-Agent Pipeline
-            </span>
-            <span className={`text-[10px] font-mono font-bold ${
-              agentPhase === "idle" ? "text-muted" : agentPhase === "complete" ? "text-emerald-400" : "text-accent"
-            }`}>
-              {agentPhase === "idle" ? "READY" : agentPhase === "complete" ? "VERIFIED ✓" : "EXECUTING..."}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-4 gap-1.5">
-            {agents.map((agent) => {
-              const status = getAgentStatus(agent.id);
-              const isActive = status === "active";
-              const isDone = status === "done";
-              const Icon = agent.icon;
-
-              return (
-                <div
-                  key={agent.id}
-                  className={`flex flex-col items-center justify-center rounded-xl p-2 text-center transition-all ${
-                    isActive
-                      ? "border border-accent/60 bg-accent/10"
-                      : isDone
-                      ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                      : "border border-line/60 bg-bg/50 text-muted"
-                  }`}
-                >
-                  {isActive ? (
-                    <Loader2 size={14} className="animate-spin text-accent" />
-                  ) : isDone ? (
-                    <CheckCircle2 size={14} className="text-emerald-400" />
-                  ) : (
-                    <Icon size={14} />
-                  )}
-                  <span className="mt-1 text-[10px] font-medium truncate w-full">
-                    {agent.name.split(" ")[0]}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {activeAgentLog && (
-            <div className="mt-2 text-center font-mono text-[10px] text-accent truncate px-2 py-1 bg-accent/5 rounded-lg border border-accent/20">
-              <span className="animate-pulse">›</span> {activeAgentLog}
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6">
@@ -602,9 +547,9 @@ export default function AskAI() {
 
         {/* CHAT PANEL (Full width on mobile, 8-cols on desktop) */}
         <div className="col-span-12 lg:col-span-8">
-          <div className="rounded-[24px] sm:rounded-[28px] border border-line bg-card shadow-sm overflow-hidden flex flex-col h-[580px] sm:h-[650px]">
+          <div className="rounded-[24px] sm:rounded-[28px] border border-line bg-card shadow-sm overflow-hidden flex flex-col h-[600px] sm:h-[660px]">
             {/* Chat Header */}
-            <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/80 backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/90 backdrop-blur-sm">
               <div className="flex items-center gap-2.5">
                 <div className="relative">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
@@ -626,6 +571,69 @@ export default function AskAI() {
                 >
                   Clear Chat
                 </button>
+              )}
+            </div>
+
+            {/* EMBEDDED LIVE 4-AGENT PIPELINE BAR (PERMANENTLY VISIBLE IN MOBILE & DESKTOP CHAT) */}
+            <div className="border-b border-line/70 bg-bg/70 backdrop-blur-md px-3 sm:px-5 py-2.5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-text flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-accent" /> 4-Agent Pipeline
+                </span>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                  agentPhase === "idle"
+                    ? "text-muted bg-line/40"
+                    : agentPhase === "complete"
+                    ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                    : "text-accent bg-accent/10 border border-accent/20 animate-pulse"
+                }`}>
+                  {agentPhase === "idle" ? "READY" : agentPhase === "complete" ? "ALL 4 AGENTS VERIFIED ✓" : `${agentPhase.toUpperCase()} RUNNING...`}
+                </span>
+              </div>
+
+              {/* 4 Agent interactive status nodes */}
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                {agents.map((agent) => {
+                  const status = getAgentStatus(agent.id);
+                  const isActive = status === "active";
+                  const isDone = status === "done";
+                  const Icon = agent.icon;
+
+                  return (
+                    <div
+                      key={agent.id}
+                      className={`flex items-center justify-center sm:justify-start gap-1 sm:gap-2 rounded-xl py-1.5 px-1.5 sm:px-2.5 text-center sm:text-left transition-all ${
+                        isActive
+                          ? "border border-accent/60 bg-accent/15 text-accent shadow-sm"
+                          : isDone
+                          ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                          : "border border-line/50 bg-card/70 text-muted"
+                      }`}
+                    >
+                      {isActive ? (
+                        <Loader2 size={12} className="animate-spin text-accent shrink-0" />
+                      ) : isDone ? (
+                        <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                      ) : (
+                        <Icon size={12} className="shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <span className="block text-[10px] sm:text-xs font-semibold truncate leading-tight">
+                          {agent.name.split(" ")[0]}
+                        </span>
+                        <span className="hidden sm:block text-[9px] text-muted truncate">
+                          {agent.role.split(" ")[0]}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {activeAgentLog && (
+                <div className="mt-2 text-center font-mono text-[10px] text-accent truncate px-2.5 py-1 bg-accent/10 rounded-lg border border-accent/20">
+                  <span className="animate-pulse">›</span> {activeAgentLog}
+                </div>
               )}
             </div>
 
@@ -690,6 +698,25 @@ export default function AskAI() {
                     {/* Assistant Metadata & Source Badges */}
                     {msg.role === "assistant" && (
                       <div className="mt-3.5 pt-3 border-t border-line/60 space-y-2.5">
+                        {/* 4 Autonomous Agents Stamp */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-text">
+                            <Sparkles size={10} className="text-accent" /> 4 Agents:
+                          </span>
+                          <span className="rounded-md bg-accent/10 border border-accent/20 px-1.5 py-0.5 text-[9px] font-mono text-accent">
+                            Intake ✓
+                          </span>
+                          <span className="rounded-md bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[9px] font-mono text-purple-400">
+                            Retrieval ✓
+                          </span>
+                          <span className="rounded-md bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 text-[9px] font-mono text-amber-400">
+                            Reasoning ✓
+                          </span>
+                          <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[9px] font-mono text-emerald-400">
+                            Grounding ✓
+                          </span>
+                        </div>
+
                         {/* Source badges */}
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5">
