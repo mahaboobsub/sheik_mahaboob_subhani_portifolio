@@ -41,16 +41,26 @@ export default function ContactFooter() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message automatically.");
+      const data = await response.json().catch(() => null);
+
+      if (data && (data.success === true || data.success === "true")) {
+        setFormState("sent");
+        setStatusMessage("✓ Message delivered directly to skmahaboobsubhani62@gmail.com!");
+        setFormData({ name: "", email: "", message: "", honey: "" });
+        setTimeout(() => setFormState("idle"), 6000);
+        return;
       }
 
-      setFormState("sent");
-      setStatusMessage("Message sent! I have received your email and will get back to you shortly.");
-      setFormData({ name: "", email: "", message: "", honey: "" });
-      setTimeout(() => {
-        setFormState("idle");
-      }, 6000);
+      // Check if FormSubmit needs 1-time activation
+      if (data?.message?.toLowerCase().includes("activation")) {
+        setFormState("sent");
+        setStatusMessage(
+          "✉️ FormSubmit sent an 'Activate Form' confirmation email to skmahaboobsubhani62@gmail.com. Please open Gmail (check Inbox & Spam) and click 'Activate Form' once. Once clicked, all future messages arrive instantly!"
+        );
+        return;
+      }
+
+      throw new Error(data?.message || "Failed to send message automatically.");
     } catch {
       // Fallback: If network or adblocker blocked formsubmit, open user's email client
       setFormState("idle");
@@ -253,10 +263,19 @@ export default function ContactFooter() {
                 </button>
 
                 <a
-                  href={`mailto:${profile.email}?subject=Portfolio%20Inquiry`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs text-muted hover:text-text transition-colors"
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${profile.email}&su=Portfolio%20Inquiry`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-4 py-2.5 text-xs text-muted hover:text-text hover:border-accent/40 transition-colors"
                 >
-                  <Mail size={13} /> Or open email app directly
+                  <Mail size={13} className="text-[#ea4335]" /> Open in Gmail
+                </a>
+
+                <a
+                  href={`mailto:${profile.email}?subject=Portfolio%20Inquiry`}
+                  className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs text-muted hover:text-text transition-colors"
+                >
+                  Email app
                 </a>
               </div>
             </form>
