@@ -511,3 +511,60 @@ export const projects: ProjectItem[] = [
     },
   },
 ];
+
+// Experience timeline (from resume)
+export const experience = [
+  {
+    role: "AI & Full Stack Developer",
+    company: "Ruvinsys Global Solutions",
+    period: "Dec 2025 – Present",
+    type: "Full-time",
+    bullets: [
+      "Designed and implemented an asynchronous 4-agent pipeline using FastAPI, hybrid search, and AI models to generate CBSE-compliant examinations in under 10 seconds.",
+      "Built a custom RAG ingestion pipeline using PyMuPDF and Gemini Vision OCR to process textbooks containing formulas and diagrams into searchable vector embeddings.",
+      "Collaborated with a 4-member team to integrate backend services with a Node.js and Prisma database layer while implementing review workflows and automated testing.",
+    ],
+    stack: ["FastAPI", "Python", "LangGraph", "Qdrant", "Gemini Vision", "Node.js", "Prisma"],
+  },
+  {
+    role: "Product Development Intern",
+    company: "National Institute of Technology Andhra Pradesh",
+    period: "May 2025 – Jul 2025",
+    type: "Internship",
+    bullets: [
+      "Developed a student dashboard for an AI-powered chatbot platform featuring PDF upload, chat history, and document management capabilities.",
+      "Integrated frontend components with backend APIs and performed API testing using Postman to ensure reliable system functionality.",
+      "Explored RAG, Graph DBs, Vector DBs, and ArXiv API integration for AI-powered retrieval.",
+    ],
+    stack: ["React", "FastAPI", "RAG", "Vector DB", "Postman", "REST APIs"],
+  },
+];
+
+// Education (from resume)
+export const education = [
+  {
+    degree: "B.Tech in Computer Science and Engineering",
+    institution: "DNR College of Engineering and Technology",
+    period: "2023 – 2026",
+    grade: "CGPA: 8.04 / 10",
+  },
+  {
+    degree: "Diploma in Electronics and Communication Engineering",
+    institution: "SMT B. Seetha Polytechnic",
+    period: "2020 – 2023",
+    grade: "CGPA: 9.3 / 10",
+  },
+];
+
+// Achievements & Certifications (from resume)
+export const achievements = [
+  "Solved 250+ DSA problems across coding platforms",
+  "Top 12 Finalist in AI for Good Hackathon 2.0",
+  "Oracle Cloud Infrastructure 2025 Generative AI Professional",
+];
+
+// Social links
+export const socials = [
+  { label: "GitHub", url: "https://github.com/mahaboobsub", icon: "github" },
+  { label: "LinkedIn", url: "https://linkedin.com/in/sheik-mahaboob-subhani", icon: "linkedin" },
+];

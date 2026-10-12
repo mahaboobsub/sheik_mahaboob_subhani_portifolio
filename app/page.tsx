@@ -5,16 +5,10 @@ import ProofStrip from "@/components/ProofStrip";
 import HowIBuild from "@/components/sections/HowIBuild";
 import WorkBento from "@/components/sections/WorkBento";
 import SkillsBento from "@/components/sections/SkillsBento";
-
-// Placeholders so nav anchors work. Replaced in subsequent build phases.
-function Soon({ id, title }: { id: string; title: string }) {
-  return (
-    <section id={id} className="mx-auto max-w-[1200px] scroll-mt-24 px-6 py-32 border-t border-line">
-      <h2 className="text-4xl font-semibold tracking-[-0.03em]">{title}</h2>
-      <p className="mt-3 text-muted">Coming in the next build phase.</p>
-    </section>
-  );
-}
+import ExperienceTimeline from "@/components/sections/ExperienceTimeline";
+import EducationSection from "@/components/sections/EducationSection";
+import AskAI from "@/components/sections/AskAI";
+import ContactFooter from "@/components/sections/ContactFooter";
 
 export default function Page() {
   return (
@@ -26,10 +20,11 @@ export default function Page() {
         <ProofStrip />
         <HowIBuild />
         <WorkBento />
-        <Soon id="experience" title="Experience" />
+        <ExperienceTimeline />
         <SkillsBento />
-        <Soon id="ask" title="Ask my AI" />
-        <Soon id="contact" title="Let’s build something." />
+        <EducationSection />
+        <AskAI />
+        <ContactFooter />
       </main>
     </>
   );
