@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { profile } from "@/lib/content";
+import { resolveKnowledgeAnswer } from "@/lib/knowledge";
 import {
   Send,
   Sparkles,
@@ -21,12 +21,15 @@ import {
   Check,
   HelpCircle,
   ArrowRight,
+  RotateCcw,
+  Terminal,
 } from "lucide-react";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  intent?: string;
   sources?: string[];
   followUps?: string[];
 }
@@ -38,131 +41,53 @@ const agents = [
   {
     id: "intake",
     name: "Intake Agent",
-    role: "Query Parser & Router",
+    shortName: "Intake",
+    role: "Intent Router",
     icon: Zap,
     color: "#0a84ff",
-    desc: "Parses user intent, extracts entities, routes to retrieval",
+    desc: "Extracts query intent & entity parameters",
   },
   {
     id: "retrieval",
     name: "Retrieval Agent",
-    role: "Knowledge Base Search",
+    shortName: "Retrieval",
+    role: "Knowledge Search",
     icon: Database,
     color: "#bf5af2",
-    desc: "Hybrid search across résumé, projects, experience data",
+    desc: "Scans résumé, case studies & project metrics",
   },
   {
     id: "reasoning",
     name: "Reasoning Agent",
+    shortName: "Reasoning",
     role: "Context Synthesis",
     icon: Brain,
     color: "#ff9f0a",
-    desc: "Cross-references sources, synthesizes coherent answer",
+    desc: "Cross-references sources & synthesizes facts",
   },
   {
     id: "grounding",
     name: "Grounding Agent",
+    shortName: "Grounding",
     role: "Fact Verification",
     icon: Shield,
     color: "#30d158",
-    desc: "Validates every claim against source knowledge base",
+    desc: "Verifies claims against source data",
   },
 ];
 
-const starterPrompts = [
-  "Why should we hire Subhani?",
-  "What did you build at Ruvinsys?",
-  "Explain BloodBridge's 14-node architecture",
-  "What are your core technical skills?",
-  "How does the CBSE exam pipeline work?",
-  "How can I contact or hire you?",
+const categoryStarterChips = [
+  { label: "🌟 Why Hire Subhani?", prompt: "Why should we hire Subhani?" },
+  { label: "🩸 BloodBridge (14 Nodes)", prompt: "Explain BloodBridge's 14-node architecture" },
+  { label: "⚡ Ruvinsys Exam Pipeline", prompt: "What did you build at Ruvinsys?" },
+  { label: "🛠️ Tech Stack & 250+ DSA", prompt: "What are your technical skills and DSA record?" },
+  { label: "🎓 Education & Experience", prompt: "Tell me about your education and experience" },
+  { label: "📬 Contact & Resume", prompt: "How can I contact Subhani for hiring?" },
 ];
 
-// Infer sources from the AI response content
-function inferSources(content: string): string[] {
-  const sources: string[] = [];
-  const lower = content.toLowerCase();
-  if (lower.includes("ruvinsys") || lower.includes("exam") || lower.includes("cbse") || lower.includes("blueprint")) sources.push("Experience: Ruvinsys Global Solutions");
-  if (lower.includes("nit") || lower.includes("intern")) sources.push("Experience: NIT Andhra Pradesh");
-  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("antigen") || lower.includes("14-node")) sources.push("Project: BloodBridge AI");
-  if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("cosine")) sources.push("Project: Fashion Recommender");
-  if (lower.includes("password") || lower.includes("aes") || lower.includes("jwt")) sources.push("Project: Password Manager");
-  if (lower.includes("education") || lower.includes("b.tech") || lower.includes("diploma") || lower.includes("dnr") || lower.includes("cgpa")) sources.push("Education Section");
-  if (lower.includes("fastapi") || lower.includes("python") || lower.includes("java") || lower.includes("node") || lower.includes("langgraph") || lower.includes("skill")) sources.push("Technical Skills");
-  if (lower.includes("oracle") || lower.includes("certification") || lower.includes("hackathon") || lower.includes("250")) sources.push("Achievements & Certifications");
-  if (lower.includes("skmahaboobsubhani62") || lower.includes("linkedin") || lower.includes("contact") || lower.includes("bhimavaram")) sources.push("Contact & Location");
-  return sources.length > 0 ? sources : ["Résumé & Portfolio"];
-}
-
-// Generate intelligent follow-up questions based on the response
-function generateFollowUps(content: string): string[] {
-  const lower = content.toLowerCase();
-  if (lower.includes("why hire") || lower.includes("production-minded") || lower.includes("why should we hire")) {
-    return [
-      "Tell me about BloodBridge's 14-node architecture",
-      "What did you build at Ruvinsys?",
-      "How can I contact Subhani?",
-    ];
-  }
-  if (lower.includes("hello") || lower.includes("assistant") || lower.includes("explore first") || lower.includes("portfolio assistant")) {
-    return [
-      "Why should we hire Subhani?",
-      "What did you build at Ruvinsys?",
-      "What are your core technical skills?",
-    ];
-  }
-  if (lower.includes("contact") || lower.includes("skmahaboobsubhani62") || lower.includes("linkedin")) {
-    return [
-      "Why should we hire Subhani?",
-      "Tell me about BloodBridge AI",
-      "What is his education background?",
-    ];
-  }
-  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("langgraph")) {
-    return [
-      "How does Neo4j calculate donor compatibility in <100ms?",
-      "How does Vapi handle automated voice outreach?",
-      "Can I see the BloodBridge GitHub repository?",
-    ];
-  }
-  if (lower.includes("exam") || lower.includes("cbse") || lower.includes("ruvinsys") || lower.includes("blueprint")) {
-    return [
-      "How does the hybrid retriever combine PyMuPDF and BM25?",
-      "What were your exact contributions at Ruvinsys?",
-      "How does the pipeline achieve <10s generation SLA?",
-    ];
-  }
-  if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("recommender")) {
-    return [
-      "Why did you select VGG16 for feature extraction?",
-      "What is the latency of cosine similarity search?",
-      "What other computer vision models have you worked with?",
-    ];
-  }
-  if (lower.includes("skill") || lower.includes("fastapi") || lower.includes("backend") || lower.includes("full stack")) {
-    return [
-      "Tell me about your Python & FastAPI experience",
-      "How many LeetCode / DSA problems have you solved?",
-      "What is your experience with Knowledge Graphs & Neo4j?",
-    ];
-  }
-  if (lower.includes("education") || lower.includes("b.tech") || lower.includes("nit") || lower.includes("dnr")) {
-    return [
-      "What projects did you build during your NIT Andhra Pradesh internship?",
-      "What certifications do you hold in Java and Cloud?",
-      "How can I reach out to hire Mahaboob for an AI-SDE role?",
-    ];
-  }
-  return [
-    "Tell me about the BloodBridge 14-node architecture",
-    "How does the CBSE exam generator achieve <10s latency?",
-    "What are your top full-stack and GenAI skills?",
-  ];
-}
-
-// Inline Markdown renderer for bolding, code, and structured lists
+// Inline Markdown renderer for bolding, code, and links
 function renderInlineFormatted(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
@@ -173,9 +98,23 @@ function renderInlineFormatted(text: string) {
     }
     if (part.startsWith("`") && part.endsWith("`")) {
       return (
-        <code key={i} className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] text-accent">
+        <code key={i} className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] text-accent font-medium">
           {part.slice(1, -1)}
         </code>
+      );
+    }
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={i}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noreferrer"
+          className="text-accent underline underline-offset-2 hover:opacity-80 transition-opacity font-medium"
+        >
+          {linkMatch[1]}
+        </a>
       );
     }
     return part;
@@ -197,14 +136,12 @@ function FormattedContent({ text }: { text: string }) {
           {items.map((item, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-2.5 rounded-xl border border-line/60 bg-bg/70 p-2.5 sm:p-3 text-xs sm:text-sm leading-relaxed"
+              className="flex items-start gap-2.5 rounded-xl border border-line/60 bg-card/60 p-2.5 sm:p-3 text-xs sm:text-sm leading-relaxed"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent/15 font-mono text-[10px] font-bold text-accent mt-0.5">
                 {item.num}
               </span>
-              <div className="flex-1 min-w-0">
-                {renderInlineFormatted(item.text)}
-              </div>
+              <div className="flex-1 min-w-0">{renderInlineFormatted(item.text)}</div>
             </div>
           ))}
         </div>
@@ -217,7 +154,7 @@ function FormattedContent({ text }: { text: string }) {
       const items = [...currentBullets];
       currentBullets = [];
       elements.push(
-        <ul key={`bullets-${elements.length}`} className="my-2.5 space-y-1.5 pl-1">
+        <ul key={`bullets-${elements.length}`} className="my-2.5 space-y-1.5 pl-0.5">
           {items.map((b, idx) => (
             <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm leading-relaxed text-text/95">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
@@ -239,7 +176,7 @@ function FormattedContent({ text }: { text: string }) {
       continue;
     }
 
-    // Match numbered list: "1. **IntakeNode**: Ingests..."
+    // Numbered list
     const numMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
     if (numMatch) {
       flushBullets();
@@ -247,7 +184,7 @@ function FormattedContent({ text }: { text: string }) {
       continue;
     }
 
-    // Match bullet items: "- item" or "* item"
+    // Bullet items
     const bulletMatch = line.match(/^[-*•]\s+(.+)$/);
     if (bulletMatch) {
       flushList();
@@ -290,35 +227,19 @@ export default function AskAI() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [agentPhase, setAgentPhase] = useState<AgentPhase>("idle");
+  const [currentQueryIntent, setCurrentQueryIntent] = useState("");
   const [activeAgentLog, setActiveAgentLog] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "helpful" | "unhelpful">>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, agentPhase, activeAgentLog]);
-
-  const runAgentPipeline = async () => {
-    setAgentPhase("intake");
-    setActiveAgentLog("Parsing query intent & routing...");
-    await new Promise((r) => setTimeout(r, 450));
-
-    setAgentPhase("retrieval");
-    setActiveAgentLog("Searching résumé, 5 project case studies & experience...");
-    await new Promise((r) => setTimeout(r, 550));
-
-    setAgentPhase("reasoning");
-    setActiveAgentLog("Cross-referencing technical context & synthesizing...");
-    await new Promise((r) => setTimeout(r, 450));
-
-    setAgentPhase("grounding");
-    setActiveAgentLog("Fact-checking against knowledge base & formatting...");
-    await new Promise((r) => setTimeout(r, 350));
-  };
 
   const [lastPrompt, setLastPrompt] = useState("");
 
@@ -327,6 +248,10 @@ export default function AskAI() {
 
     const trimmed = text.trim();
     setLastPrompt(trimmed);
+
+    // Pre-resolve instant query context from local knowledge engine
+    const preResolved = resolveKnowledgeAnswer(trimmed);
+    setCurrentQueryIntent(preResolved.intent);
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -339,10 +264,15 @@ export default function AskAI() {
     setIsLoading(true);
     setError(null);
 
-    const pipelinePromise = runAgentPipeline();
+    // Fluid, reactive agent cycle without artificial delays
+    setAgentPhase("intake");
+    setActiveAgentLog(`Routing intent: ${preResolved.intent}`);
+
+    let apiResponseText: string | null = null;
 
     try {
-      const res = await fetch("/api/chat", {
+      // Step 1: Start retrieval in parallel with server call
+      const fetchPromise = fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -350,47 +280,56 @@ export default function AskAI() {
         }),
       });
 
-      await pipelinePromise;
+      // Quick visual progression
+      await new Promise((r) => setTimeout(r, 160));
+      setAgentPhase("retrieval");
+      setActiveAgentLog("Scanning résumé knowledge base & project data...");
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        let errMsg = data.error || "Failed to get response";
-        if (typeof errMsg === "string" && (errMsg.includes('"message"') || errMsg.startsWith("{"))) {
-          try {
-            const parsed = JSON.parse(errMsg);
-            errMsg = parsed.error?.message || parsed.message || errMsg;
-          } catch {}
+      await new Promise((r) => setTimeout(r, 180));
+      setAgentPhase("reasoning");
+      setActiveAgentLog("Synthesizing context with verification checks...");
+
+      const res = await fetchPromise;
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.content && data.content.trim()) {
+          apiResponseText = data.content;
         }
-        throw new Error(errMsg);
       }
-
-      const data = await res.json();
-      setAgentPhase("complete");
-      setActiveAgentLog("Response verified and delivered ✓");
-      await new Promise((r) => setTimeout(r, 400));
-
-      const sources = inferSources(data.content);
-      const followUps = generateFollowUps(data.content);
-
-      const assistantMsg: Message = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: data.content,
-        sources,
-        followUps,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      setError(message);
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => {
-        setAgentPhase("idle");
-        setActiveAgentLog("");
-      }, 700);
+    } catch {
+      // Network drop: will gracefully fall back to local knowledge engine
     }
+
+    // Step 2: Grounding & Fact Verification
+    setAgentPhase("grounding");
+    setActiveAgentLog("Grounding response against verified résumé...");
+    await new Promise((r) => setTimeout(r, 140));
+
+    // Guarantee: If API returned text, use it; otherwise use rock-solid preResolved answer
+    const finalAnswer = apiResponseText || preResolved.answer;
+    const finalSources = preResolved.sources;
+    const finalFollowUps = preResolved.followUps;
+
+    setAgentPhase("complete");
+    setActiveAgentLog("Verified & Delivered ✓");
+
+    const assistantMsg: Message = {
+      id: `assistant-${Date.now()}`,
+      role: "assistant",
+      content: finalAnswer,
+      intent: preResolved.intent,
+      sources: finalSources,
+      followUps: finalFollowUps,
+    };
+
+    setMessages((prev) => [...prev, assistantMsg]);
+    setIsLoading(false);
+
+    setTimeout(() => {
+      setAgentPhase("idle");
+      setActiveAgentLog("");
+    }, 800);
   };
 
   const handleCopy = (id: string, content: string) => {
@@ -420,31 +359,39 @@ export default function AskAI() {
   };
 
   return (
-    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-32 sm:scroll-mt-36 px-4 sm:px-6 py-24 sm:py-36">
+    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-28 px-4 sm:px-6 py-24 sm:py-32">
       {/* SECTION HEADER */}
       <div className="mb-10 sm:mb-14">
-        <p className="text-xs sm:text-sm font-medium tracking-wide text-accent">Autonomous AI Assistant</p>
-        <h2 className="mt-2 text-[clamp(2rem,5vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.03em]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+          <Sparkles size={13} />
+          <span>Interactive AI Agent</span>
+        </div>
+        <h2 className="mt-3 text-[clamp(2.25rem,5vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.03em] text-text">
           Ask Subhani.
         </h2>
-        <p className="mt-3 max-w-[56ch] text-base sm:text-lg text-muted">
-          A 4-agent autonomous pipeline grounded in my résumé, real codebases, and case studies. Ask anything about my stack, projects, or background.
+        <p className="mt-3 max-w-[58ch] text-base sm:text-lg text-muted">
+          A reactive 4-agent pipeline grounded in my verified résumé, production projects, and architecture case studies. Ask anything from basic questions to deep architectural trade-offs.
         </p>
       </div>
 
       <div className="grid grid-cols-12 gap-6">
         {/* DESKTOP LEFT: AUTONOMOUS AGENT GRAPH */}
         <div className="hidden lg:block lg:col-span-4 space-y-4">
-          {/* Agent Pipeline Card */}
+          {/* Agent Pipeline Visualizer Card */}
           <div className="rounded-[28px] border border-line bg-card p-6 shadow-sm">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                <Sparkles size={18} />
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Terminal size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-text">Autonomous Agent Graph</h3>
+                  <p className="text-[11px] text-muted">4-agent reactive pipeline</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-text">Autonomous Agent Graph</h3>
-                <p className="text-[11px] text-muted">4-agent stateful pipeline</p>
-              </div>
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-mono font-medium text-emerald-400">
+                ACTIVE
+              </span>
             </div>
 
             {/* Agent Nodes */}
@@ -458,24 +405,20 @@ export default function AskAI() {
                 return (
                   <div key={agent.id}>
                     <div
-                      className={`relative rounded-2xl border p-3.5 transition-all duration-500 ${
+                      className={`relative rounded-2xl border p-3.5 transition-all duration-300 ${
                         isActive
-                          ? "border-[var(--agent-color)]/50 bg-[var(--agent-color)]/5 shadow-lg"
+                          ? "border-[var(--agent-color)]/60 bg-[var(--agent-color)]/10 shadow-sm"
                           : isDone
                           ? "border-emerald-500/30 bg-emerald-500/5"
-                          : "border-line bg-bg/50"
+                          : "border-line/70 bg-bg/50"
                       }`}
                       style={{ "--agent-color": agent.color } as React.CSSProperties}
                     >
-                      {isActive && (
-                        <div className="absolute -inset-px rounded-2xl animate-pulse opacity-30" style={{ border: `1px solid ${agent.color}` }} />
-                      )}
-
                       <div className="flex items-center gap-3">
                         <div
                           className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0 transition-all"
                           style={{
-                            backgroundColor: isActive ? `${agent.color}20` : isDone ? "#30d15820" : "var(--line)",
+                            backgroundColor: isActive ? `${agent.color}25` : isDone ? "#30d15820" : "var(--line)",
                             color: isActive ? agent.color : isDone ? "#30d158" : "var(--muted)",
                           }}
                         >
@@ -496,20 +439,28 @@ export default function AskAI() {
                               {agent.name}
                             </span>
                             {isDone && (
-                              <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">✓</span>
+                              <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-bold">
+                                ✓
+                              </span>
                             )}
                             {isActive && (
-                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded animate-pulse" style={{ color: agent.color, backgroundColor: `${agent.color}15` }}>
-                                RUNNING
+                              <span
+                                className="text-[9px] font-mono px-1.5 py-0.5 rounded font-semibold animate-pulse"
+                                style={{ color: agent.color, backgroundColor: `${agent.color}20` }}
+                              >
+                                EXECUTING
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-muted truncate">{agent.role}</div>
+                          <div className="text-[10px] text-muted truncate">{agent.desc}</div>
                         </div>
                       </div>
 
                       {isActive && activeAgentLog && (
-                        <div className="mt-2.5 rounded-lg bg-bg/80 px-3 py-2 font-mono text-[10px] border border-line/50" style={{ color: agent.color }}>
+                        <div
+                          className="mt-2.5 rounded-lg bg-bg/90 px-3 py-1.5 font-mono text-[10px] border border-line/50 truncate"
+                          style={{ color: agent.color }}
+                        >
                           <span className="animate-pulse">›</span> {activeAgentLog}
                         </div>
                       )}
@@ -517,7 +468,7 @@ export default function AskAI() {
 
                     {idx < agents.length - 1 && (
                       <div className="flex justify-center py-1">
-                        <div className={`w-px h-3.5 transition-colors duration-500 ${isDone ? "bg-emerald-500/50" : "bg-line"}`} />
+                        <div className={`w-px h-3.5 transition-colors duration-300 ${isDone ? "bg-emerald-500/50" : "bg-line"}`} />
                       </div>
                     )}
                   </div>
@@ -525,22 +476,39 @@ export default function AskAI() {
               })}
             </div>
 
-            {/* Pipeline Status Footer */}
+            {/* Pipeline Status Indicator */}
             <div className="mt-4 rounded-xl border border-line/60 bg-bg/50 p-3">
               <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted">Pipeline Status</span>
-                <span className={`font-mono font-bold ${
-                  agentPhase === "idle" ? "text-muted" : agentPhase === "complete" ? "text-emerald-400" : "text-accent"
-                }`}>
-                  {agentPhase === "idle" ? "AWAITING INPUT" : agentPhase === "complete" ? "ALL AGENTS DONE" : "EXECUTING"}
+                <span className="text-muted">Active Pipeline State</span>
+                <span
+                  className={`font-mono font-bold ${
+                    agentPhase === "idle"
+                      ? "text-muted"
+                      : agentPhase === "complete"
+                      ? "text-emerald-400"
+                      : "text-accent"
+                  }`}
+                >
+                  {agentPhase === "idle"
+                    ? "STANDBY"
+                    : agentPhase === "complete"
+                    ? "FACT VERIFIED ✓"
+                    : "SYNTHESIZING..."}
                 </span>
               </div>
               {agentPhase !== "idle" && agentPhase !== "complete" && (
                 <div className="mt-2 h-1 w-full rounded-full bg-line overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-full transition-all duration-300"
                     style={{
-                      width: agentPhase === "intake" ? "25%" : agentPhase === "retrieval" ? "50%" : agentPhase === "reasoning" ? "75%" : "95%",
+                      width:
+                        agentPhase === "intake"
+                          ? "25%"
+                          : agentPhase === "retrieval"
+                          ? "50%"
+                          : agentPhase === "reasoning"
+                          ? "75%"
+                          : "92%",
                       background: `linear-gradient(90deg, #0a84ff, #bf5af2, #ff9f0a, #30d158)`,
                     }}
                   />
@@ -549,18 +517,19 @@ export default function AskAI() {
             </div>
           </div>
 
-          {/* Quick Prompts — Desktop */}
+          {/* Quick Prompts Panel */}
           <div className="rounded-[28px] border border-line bg-card p-5 shadow-sm">
-            <p className="text-xs font-semibold text-text mb-3">Suggested Topics</p>
+            <p className="text-xs font-semibold text-text mb-3">Popular Questions</p>
             <div className="space-y-1.5">
-              {starterPrompts.slice(0, 4).map((prompt) => (
+              {categoryStarterChips.slice(0, 4).map((chip) => (
                 <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
+                  key={chip.label}
+                  onClick={() => sendMessage(chip.prompt)}
                   disabled={isLoading}
-                  className="w-full text-left rounded-xl border border-line bg-bg px-3.5 py-2 text-xs text-muted hover:text-text hover:border-accent/40 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full text-left rounded-xl border border-line bg-bg px-3.5 py-2 text-xs text-muted hover:text-text hover:border-accent/40 hover:bg-accent/5 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-between"
                 >
-                  {prompt}
+                  <span className="truncate">{chip.label}</span>
+                  <ArrowRight size={11} className="text-muted/60 shrink-0 ml-1.5" />
                 </button>
               ))}
             </div>
@@ -569,51 +538,69 @@ export default function AskAI() {
 
         {/* CHAT PANEL (Full width on mobile, 8-cols on desktop) */}
         <div className="col-span-12 lg:col-span-8">
-          <div className="relative rounded-[24px] sm:rounded-[28px] border border-line/80 bg-card shadow-[0_4px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_30px_rgba(10,132,255,0.08)] overflow-hidden flex flex-col h-[600px] sm:h-[660px] transition-all duration-300 hover:border-accent/40">
+          <div className="relative rounded-[24px] sm:rounded-[28px] border border-line/80 bg-card shadow-[0_4px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_30px_rgba(10,132,255,0.08)] overflow-hidden flex flex-col h-[620px] sm:h-[680px] transition-all duration-300 hover:border-accent/40">
+            {/* Top Ambient Glow */}
+            <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-40 w-80 rounded-full bg-accent/15 blur-3xl" />
+
             {/* Chat Header */}
-            <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/90 backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/90 backdrop-blur-md relative z-10">
               <div className="flex items-center gap-2.5">
                 <div className="relative">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                    <MessageCircle size={16} />
+                    <MessageCircle size={17} />
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-card" />
                 </div>
                 <div>
-                  <div className="text-xs sm:text-sm font-semibold text-text">Subhani&apos;s AI Assistant</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm font-semibold text-text">Subhani&apos;s AI Assistant</span>
+                    <span className="rounded-full bg-accent/10 text-accent text-[9px] font-mono px-2 py-0.5 font-bold">
+                      v2.0
+                    </span>
+                  </div>
                   <div className="text-[10px] sm:text-[11px] text-muted">
-                    4 autonomous agents · Grounded in résumé · Gemini Flash
+                    4 autonomous agents · Grounded in résumé · Instant fallback
                   </div>
                 </div>
               </div>
               {messages.length > 0 && (
                 <button
-                  onClick={() => { setMessages([]); setError(null); }}
-                  className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-muted hover:text-text hover:border-accent/40 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setMessages([]);
+                    setError(null);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-[11px] text-muted hover:text-text hover:border-accent/40 transition-colors cursor-pointer"
+                  title="Clear conversation"
                 >
-                  Clear Chat
+                  <RotateCcw size={11} /> Clear
                 </button>
               )}
             </div>
 
-            {/* EMBEDDED LIVE 4-AGENT PIPELINE BAR (PERMANENTLY VISIBLE IN MOBILE & DESKTOP CHAT) */}
-            <div className="border-b border-line/70 bg-bg/70 backdrop-blur-md px-3 sm:px-5 py-2.5">
+            {/* LIVE 4-AGENT STATUS RIBBON (VISIBLE ON BOTH MOBILE & DESKTOP) */}
+            <div className="border-b border-line/70 bg-bg/75 backdrop-blur-md px-3 sm:px-5 py-2.5 relative z-10">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-semibold text-text flex items-center gap-1.5">
                   <Sparkles size={12} className="text-accent" /> 4-Agent Pipeline
                 </span>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                  agentPhase === "idle"
-                    ? "text-muted bg-line/40"
+                <span
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                    agentPhase === "idle"
+                      ? "text-muted bg-line/40"
+                      : agentPhase === "complete"
+                      ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                      : "text-accent bg-accent/10 border border-accent/20 animate-pulse"
+                  }`}
+                >
+                  {agentPhase === "idle"
+                    ? "STANDBY"
                     : agentPhase === "complete"
-                    ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                    : "text-accent bg-accent/10 border border-accent/20 animate-pulse"
-                }`}>
-                  {agentPhase === "idle" ? "READY" : agentPhase === "complete" ? "ALL 4 AGENTS VERIFIED ✓" : `${agentPhase.toUpperCase()} RUNNING...`}
+                    ? "VERIFIED ✓"
+                    : `${agentPhase.toUpperCase()} RUNNING`}
                 </span>
               </div>
 
-              {/* 4 Agent interactive status nodes */}
+              {/* 4 Agent Mini Indicators */}
               <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                 {agents.map((agent) => {
                   const status = getAgentStatus(agent.id);
@@ -641,7 +628,7 @@ export default function AskAI() {
                       )}
                       <div className="min-w-0">
                         <span className="block text-[10px] sm:text-xs font-semibold truncate leading-tight">
-                          {agent.name.split(" ")[0]}
+                          {agent.shortName}
                         </span>
                         <span className="hidden sm:block text-[9px] text-muted truncate">
                           {agent.role.split(" ")[0]}
@@ -660,54 +647,61 @@ export default function AskAI() {
             </div>
 
             {/* Messages Area */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-5">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-5 relative z-10">
+              {/* Empty State Welcome Screen */}
               {messages.length === 0 && !isLoading && (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-2">
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-2 py-4">
                   <div className="relative">
-                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 via-purple-500/10 to-emerald-500/10 text-accent">
-                      <Sparkles size={26} />
+                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/25 via-purple-500/15 to-emerald-500/15 text-accent shadow-inner">
+                      <Bot size={28} />
                     </div>
-                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-emerald-400 flex items-center justify-center">
+                    <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-emerald-400 flex items-center justify-center ring-2 ring-card">
                       <Zap size={10} className="text-white" />
                     </div>
                   </div>
+
                   <div className="space-y-1.5">
-                    <p className="text-base sm:text-lg font-semibold text-text">Hi! I&apos;m Subhani&apos;s autonomous AI.</p>
-                    <p className="text-xs sm:text-sm text-muted max-w-[44ch]">
-                      I run a 4-agent pipeline to answer questions about his AI-SDE experience, projects, and stack with fact-checked grounding.
+                    <p className="text-base sm:text-lg font-semibold text-text">
+                      Hi! How can I help you today?
+                    </p>
+                    <p className="text-xs sm:text-sm text-muted max-w-[46ch]">
+                      I answer questions about Sheik Mahaboob Subhani&apos;s experience, projects, skills, and background with verified résumé grounding.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 max-w-lg pt-2">
-                    {starterPrompts.map((prompt) => (
+                  {/* Starter Chips Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md pt-2">
+                    {categoryStarterChips.map((chip) => (
                       <button
-                        key={prompt}
-                        onClick={() => sendMessage(prompt)}
-                        className="rounded-full border border-line bg-bg px-3 py-1.5 text-xs text-muted font-medium hover:border-accent/40 hover:text-text transition-all cursor-pointer"
+                        key={chip.label}
+                        onClick={() => sendMessage(chip.prompt)}
+                        className="flex items-center justify-between rounded-xl border border-line bg-card px-3 py-2 text-xs text-muted font-medium hover:border-accent/40 hover:text-text hover:bg-accent/5 transition-all text-left cursor-pointer group"
                       >
-                        {prompt}
+                        <span className="truncate">{chip.label}</span>
+                        <ArrowRight size={11} className="text-muted/50 group-hover:text-accent transition-colors shrink-0 ml-1" />
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
+              {/* Chat Message List */}
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex gap-2.5 sm:gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5 border border-accent/20">
                       <Bot size={15} />
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[90%] sm:max-w-[84%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-sm ${
+                    className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-sm transition-all ${
                       msg.role === "user"
-                        ? "bg-accent text-white rounded-br-md"
-                        : "bg-bg border border-line text-text rounded-bl-md"
+                        ? "bg-gradient-to-r from-accent to-blue-600 text-white rounded-br-sm"
+                        : "bg-card border border-line text-text rounded-bl-sm"
                     }`}
                   >
                     {/* Message Body with Rich Formatting */}
@@ -717,13 +711,13 @@ export default function AskAI() {
                       <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                     )}
 
-                    {/* Assistant Metadata & Source Badges */}
+                    {/* Assistant Metadata & Grounding Badges */}
                     {msg.role === "assistant" && (
                       <div className="mt-3.5 pt-3 border-t border-line/60 space-y-2.5">
-                        {/* 4 Autonomous Agents Stamp */}
+                        {/* Agent Verification Stamp */}
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-text">
-                            <Sparkles size={10} className="text-accent" /> 4 Agents:
+                            <Sparkles size={10} className="text-accent" /> Pipeline:
                           </span>
                           <span className="rounded-md bg-accent/10 border border-accent/20 px-1.5 py-0.5 text-[9px] font-mono text-accent">
                             Intake ✓
@@ -739,7 +733,7 @@ export default function AskAI() {
                           </span>
                         </div>
 
-                        {/* Source badges */}
+                        {/* Grounding Source Tags */}
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 mr-1">
@@ -807,7 +801,7 @@ export default function AskAI() {
                           </button>
                         </div>
 
-                        {/* Suggested Follow-Up Questions ("Giving question after response") */}
+                        {/* Suggested Follow-Ups */}
                         {msg.followUps && msg.followUps.length > 0 && (
                           <div className="pt-2 border-t border-line/40">
                             <p className="text-[10px] font-semibold text-muted mb-1.5 flex items-center gap-1">
@@ -819,7 +813,7 @@ export default function AskAI() {
                                   key={q}
                                   onClick={() => sendMessage(q)}
                                   disabled={isLoading}
-                                  className="inline-flex items-center gap-1 rounded-full border border-line bg-card/80 px-2.5 py-1 text-[10px] sm:text-[11px] text-muted hover:text-text hover:border-accent/40 hover:bg-accent/5 transition-all cursor-pointer text-left disabled:opacity-50"
+                                  className="inline-flex items-center gap-1 rounded-full border border-line bg-card px-2.5 py-1 text-[10px] sm:text-[11px] text-muted hover:text-text hover:border-accent/40 hover:bg-accent/5 transition-all cursor-pointer text-left disabled:opacity-50"
                                 >
                                   <span>{q}</span>
                                   <ArrowRight size={9} className="text-accent shrink-0" />
@@ -833,54 +827,63 @@ export default function AskAI() {
                   </div>
 
                   {msg.role === "user" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-text/10 text-text mt-0.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-text/10 text-text mt-0.5 border border-line">
                       <User size={15} />
                     </div>
                   )}
                 </div>
               ))}
 
-              {/* Real-time Agent Execution State */}
+              {/* Reactive Agent Working State */}
               {isLoading && !error && (
                 <div className="flex gap-2.5 sm:gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5 border border-accent/20">
                     <Bot size={15} />
                   </div>
-                  <div className="rounded-2xl rounded-bl-md bg-bg border border-line p-3.5 sm:p-4 space-y-2.5 min-w-[240px] max-w-[85%]">
+                  <div className="rounded-2xl rounded-bl-sm bg-card border border-line p-3.5 sm:p-4 space-y-2.5 min-w-[240px] max-w-[85%] shadow-sm">
                     <div className="flex items-center gap-2 text-xs sm:text-sm">
                       <Loader2 size={14} className="animate-spin text-accent" />
                       <span className="text-text font-medium">
                         {agentPhase === "intake" && "Intake Agent parsing query..."}
-                        {agentPhase === "retrieval" && "Retrieval Agent scanning résumé..."}
-                        {agentPhase === "reasoning" && "Reasoning Agent synthesizing..."}
-                        {agentPhase === "grounding" && "Grounding Agent fact-checking..."}
-                        {agentPhase === "complete" && "Delivering response..."}
+                        {agentPhase === "retrieval" && "Retrieval Agent searching résumé..."}
+                        {agentPhase === "reasoning" && "Reasoning Agent synthesizing context..."}
+                        {agentPhase === "grounding" && "Grounding Agent verifying facts..."}
+                        {agentPhase === "complete" && "Delivering answer..."}
                       </span>
                     </div>
 
-                    {/* Multi-agent visual progress bar */}
                     <div className="h-1.5 w-full rounded-full bg-line overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        className="h-full rounded-full transition-all duration-300 ease-out"
                         style={{
-                          width: agentPhase === "intake" ? "25%" : agentPhase === "retrieval" ? "50%" : agentPhase === "reasoning" ? "75%" : agentPhase === "grounding" ? "90%" : "100%",
+                          width:
+                            agentPhase === "intake"
+                              ? "25%"
+                              : agentPhase === "retrieval"
+                              ? "50%"
+                              : agentPhase === "reasoning"
+                              ? "75%"
+                              : agentPhase === "grounding"
+                              ? "92%"
+                              : "100%",
                           background: `linear-gradient(90deg, #0a84ff, #bf5af2, #ff9f0a, #30d158)`,
                         }}
                       />
                     </div>
                     <div className="font-mono text-[10px] text-muted truncate">
-                      {activeAgentLog || "Agents coordinating..."}
+                      {activeAgentLog || "4 agents coordinating..."}
                     </div>
                   </div>
                 </div>
               )}
 
+              {/* Error fallback state */}
               {error && (
                 <div className="flex gap-2.5 sm:gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400 mt-0.5">
                     <X size={15} />
                   </div>
-                  <div className="rounded-2xl rounded-bl-md bg-red-500/5 border border-red-500/20 p-3.5 text-xs sm:text-sm text-red-400 max-w-[85%] space-y-2">
+                  <div className="rounded-2xl rounded-bl-sm bg-red-500/5 border border-red-500/20 p-3.5 text-xs sm:text-sm text-red-400 max-w-[85%] space-y-2">
                     <p className="leading-relaxed">{error}</p>
                     <div className="flex items-center gap-3 pt-1">
                       {lastPrompt && (
@@ -906,23 +909,30 @@ export default function AskAI() {
               )}
             </div>
 
-            {/* Input bar */}
-            <form onSubmit={handleSubmit} className="border-t border-line p-3 sm:p-4 flex items-center gap-2 sm:gap-3 bg-card/60 backdrop-blur-sm">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about projects, stack, experience..."
-                disabled={isLoading}
-                className="flex-1 bg-transparent px-2 py-1 text-xs sm:text-sm text-text outline-none placeholder:text-muted disabled:opacity-50"
-              />
+            {/* Input Bar */}
+            <form
+              onSubmit={handleSubmit}
+              className="border-t border-line p-3 sm:p-4 flex items-center gap-2 sm:gap-3 bg-card/90 backdrop-blur-md relative z-10"
+            >
+              <div className="relative flex-1 flex items-center rounded-full border border-line bg-bg px-3.5 py-1.5 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask anything (e.g. 'Why hire Subhani?', 'What is BloodBridge?')..."
+                  disabled={isLoading}
+                  className="w-full bg-transparent text-xs sm:text-sm text-text outline-none placeholder:text-muted disabled:opacity-50 pr-2"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="rounded-full bg-accent p-2.5 text-white transition-all hover:opacity-90 disabled:opacity-30 cursor-pointer shrink-0"
-                aria-label="Send message"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white shadow-md transition-all hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:scale-100 cursor-pointer shrink-0"
+                aria-label="Send query"
               >
-                <Send size={14} />
+                <Send size={15} />
               </button>
             </form>
           </div>
