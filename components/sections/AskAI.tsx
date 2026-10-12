@@ -298,13 +298,18 @@ export default function AskAI() {
     await new Promise((r) => setTimeout(r, 350));
   };
 
+  const [lastPrompt, setLastPrompt] = useState("");
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
+
+    const trimmed = text.trim();
+    setLastPrompt(trimmed);
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: text.trim(),
+      content: trimmed,
     };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -326,8 +331,15 @@ export default function AskAI() {
       await pipelinePromise;
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to get response");
+        const data = await res.json().catch(() => ({}));
+        let errMsg = data.error || "Failed to get response";
+        if (typeof errMsg === "string" && (errMsg.includes('"message"') || errMsg.startsWith("{"))) {
+          try {
+            const parsed = JSON.parse(errMsg);
+            errMsg = parsed.error?.message || parsed.message || errMsg;
+          } catch {}
+        }
+        throw new Error(errMsg);
       }
 
       const data = await res.json();
@@ -819,11 +831,27 @@ export default function AskAI() {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400 mt-0.5">
                     <X size={15} />
                   </div>
-                  <div className="rounded-2xl rounded-bl-md bg-red-500/5 border border-red-500/20 p-3.5 text-xs sm:text-sm text-red-400 max-w-[85%]">
-                    <p>{error}</p>
-                    <button onClick={() => setError(null)} className="mt-2 text-xs underline hover:text-red-300 cursor-pointer">
-                      Dismiss
-                    </button>
+                  <div className="rounded-2xl rounded-bl-md bg-red-500/5 border border-red-500/20 p-3.5 text-xs sm:text-sm text-red-400 max-w-[85%] space-y-2">
+                    <p className="leading-relaxed">{error}</p>
+                    <div className="flex items-center gap-3 pt-1">
+                      {lastPrompt && (
+                        <button
+                          onClick={() => {
+                            setError(null);
+                            sendMessage(lastPrompt);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1 text-xs text-white font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                        >
+                          Retry Query ↺
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setError(null)}
+                        className="text-xs text-muted hover:text-text cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
