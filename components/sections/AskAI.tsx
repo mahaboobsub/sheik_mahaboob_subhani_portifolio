@@ -5,9 +5,6 @@ import { profile } from "@/lib/content";
 import {
   Send,
   Sparkles,
-  Search,
-  GitBranch,
-  Cpu,
   CheckCircle2,
   Loader2,
   User,
@@ -18,12 +15,20 @@ import {
   Brain,
   Shield,
   Zap,
+  ThumbsUp,
+  ThumbsDown,
+  Copy,
+  Check,
+  HelpCircle,
+  ArrowRight,
 } from "lucide-react";
 
 interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
   sources?: string[];
+  followUps?: string[];
 }
 
 type AgentPhase = "idle" | "intake" | "retrieval" | "reasoning" | "grounding" | "complete";
@@ -64,7 +69,7 @@ const agents = [
   },
 ];
 
-const suggestedPrompts = [
+const starterPrompts = [
   "What did you build at Ruvinsys?",
   "Explain BloodBridge's 14-node architecture",
   "What are your technical skills?",
@@ -79,13 +84,183 @@ function inferSources(content: string): string[] {
   const lower = content.toLowerCase();
   if (lower.includes("ruvinsys") || lower.includes("exam") || lower.includes("cbse")) sources.push("Experience: Ruvinsys Global Solutions");
   if (lower.includes("nit") || lower.includes("intern")) sources.push("Experience: NIT Andhra Pradesh");
-  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j")) sources.push("Project: BloodBridge AI");
+  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("antigen")) sources.push("Project: BloodBridge AI");
   if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("cosine")) sources.push("Project: Fashion Recommender");
   if (lower.includes("password") || lower.includes("aes") || lower.includes("jwt")) sources.push("Project: Password Manager");
   if (lower.includes("education") || lower.includes("b.tech") || lower.includes("diploma") || lower.includes("dnr") || lower.includes("cgpa")) sources.push("Education Section");
-  if (lower.includes("fastapi") || lower.includes("python") || lower.includes("java") || lower.includes("node")) sources.push("Technical Skills");
+  if (lower.includes("fastapi") || lower.includes("python") || lower.includes("java") || lower.includes("node") || lower.includes("langgraph")) sources.push("Technical Skills");
   if (lower.includes("oracle") || lower.includes("certification") || lower.includes("hackathon") || lower.includes("250")) sources.push("Achievements & Certifications");
-  return sources.length > 0 ? sources : ["Resume & Case Studies"];
+  return sources.length > 0 ? sources : ["Résumé & Case Studies"];
+}
+
+// Generate intelligent follow-up questions based on the response
+function generateFollowUps(content: string): string[] {
+  const lower = content.toLowerCase();
+  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("langgraph")) {
+    return [
+      "How does Neo4j calculate donor compatibility in <100ms?",
+      "How does Vapi handle automated voice outreach?",
+      "Can I see the BloodBridge GitHub repository?",
+    ];
+  }
+  if (lower.includes("exam") || lower.includes("cbse") || lower.includes("ruvinsys") || lower.includes("blueprint")) {
+    return [
+      "How does the hybrid retriever combine PyMuPDF and BM25?",
+      "What were your exact contributions at Ruvinsys?",
+      "How are Bloom's taxonomy criteria audited?",
+    ];
+  }
+  if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("recommender")) {
+    return [
+      "Why did you select VGG16 for feature extraction?",
+      "What is the average latency of cosine similarity search?",
+      "What other computer vision models have you worked with?",
+    ];
+  }
+  if (lower.includes("skill") || lower.includes("fastapi") || lower.includes("backend") || lower.includes("full stack")) {
+    return [
+      "Tell me about your Python & FastAPI experience",
+      "How many LeetCode / DSA problems have you solved?",
+      "What is your experience with Knowledge Graphs & Neo4j?",
+    ];
+  }
+  if (lower.includes("education") || lower.includes("b.tech") || lower.includes("nit") || lower.includes("dnr")) {
+    return [
+      "What projects did you build during your NIT Andhra Pradesh internship?",
+      "What certifications do you hold in Java and Cloud?",
+      "How can I reach out to hire Mahaboob for an AI-SDE role?",
+    ];
+  }
+  return [
+    "Tell me about the BloodBridge 14-node architecture",
+    "How does the CBSE exam generator achieve <10s latency?",
+    "What are your top full-stack and GenAI skills?",
+  ];
+}
+
+// Inline Markdown renderer for bolding, code, and structured lists
+function renderInlineFormatted(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold text-text">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={i} className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[11px] text-accent">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
+function FormattedContent({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let currentList: { num: string; text: string }[] = [];
+  let currentBullets: string[] = [];
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      const items = [...currentList];
+      currentList = [];
+      elements.push(
+        <div key={`numlist-${elements.length}`} className="my-3 space-y-2">
+          {items.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-start gap-2.5 rounded-xl border border-line/60 bg-bg/70 p-2.5 sm:p-3 text-xs sm:text-sm leading-relaxed"
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent/15 font-mono text-[10px] font-bold text-accent mt-0.5">
+                {item.num}
+              </span>
+              <div className="flex-1 min-w-0">
+                {renderInlineFormatted(item.text)}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+  };
+
+  const flushBullets = () => {
+    if (currentBullets.length > 0) {
+      const items = [...currentBullets];
+      currentBullets = [];
+      elements.push(
+        <ul key={`bullets-${elements.length}`} className="my-2.5 space-y-1.5 pl-1">
+          {items.map((b, idx) => (
+            <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm leading-relaxed text-text/95">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              <span>{renderInlineFormatted(b)}</span>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushList();
+      flushBullets();
+      continue;
+    }
+
+    // Match numbered list: "1. **IntakeNode**: Ingests..."
+    const numMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
+    if (numMatch) {
+      flushBullets();
+      currentList.push({ num: numMatch[1], text: numMatch[2] });
+      continue;
+    }
+
+    // Match bullet items: "- item" or "* item"
+    const bulletMatch = line.match(/^[-*•]\s+(.+)$/);
+    if (bulletMatch) {
+      flushList();
+      currentBullets.push(bulletMatch[1]);
+      continue;
+    }
+
+    flushList();
+    flushBullets();
+
+    if (line.startsWith("### ")) {
+      elements.push(
+        <h4 key={`h4-${i}`} className="mt-3 text-xs sm:text-sm font-bold text-text tracking-tight">
+          {line.replace(/^###\s+/, "")}
+        </h4>
+      );
+    } else if (line.startsWith("## ")) {
+      elements.push(
+        <h3 key={`h3-${i}`} className="mt-3 text-sm sm:text-base font-bold text-text">
+          {line.replace(/^##\s+/, "")}
+        </h3>
+      );
+    } else {
+      elements.push(
+        <p key={`p-${i}`} className="text-xs sm:text-sm leading-relaxed text-text/95">
+          {renderInlineFormatted(line)}
+        </p>
+      );
+    }
+  }
+
+  flushList();
+  flushBullets();
+
+  return <div className="space-y-2.5">{elements}</div>;
 }
 
 export default function AskAI() {
@@ -95,46 +270,42 @@ export default function AskAI() {
   const [agentPhase, setAgentPhase] = useState<AgentPhase>("idle");
   const [activeAgentLog, setActiveAgentLog] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [feedbackMap, setFeedbackMap] = useState<Record<string, "helpful" | "unhelpful">>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, agentPhase]);
+  }, [messages, agentPhase, activeAgentLog]);
 
   const runAgentPipeline = async () => {
     setAgentPhase("intake");
-    setActiveAgentLog("Parsing query intent...");
-    await new Promise((r) => setTimeout(r, 500));
-    setActiveAgentLog("Entities extracted, routing to retrieval...");
-    await new Promise((r) => setTimeout(r, 400));
+    setActiveAgentLog("Parsing query intent & routing...");
+    await new Promise((r) => setTimeout(r, 450));
 
     setAgentPhase("retrieval");
-    setActiveAgentLog("Searching resume knowledge base...");
-    await new Promise((r) => setTimeout(r, 500));
-    setActiveAgentLog("Scanning 5 project case studies...");
-    await new Promise((r) => setTimeout(r, 400));
-    setActiveAgentLog("3 relevant sources found");
-    await new Promise((r) => setTimeout(r, 300));
+    setActiveAgentLog("Searching résumé, 5 project case studies & experience...");
+    await new Promise((r) => setTimeout(r, 550));
 
     setAgentPhase("reasoning");
-    setActiveAgentLog("Cross-referencing experience & projects...");
-    await new Promise((r) => setTimeout(r, 500));
-    setActiveAgentLog("Synthesizing answer from sources...");
-    await new Promise((r) => setTimeout(r, 400));
+    setActiveAgentLog("Cross-referencing technical context & synthesizing...");
+    await new Promise((r) => setTimeout(r, 450));
 
     setAgentPhase("grounding");
-    setActiveAgentLog("Fact-checking against knowledge base...");
-    await new Promise((r) => setTimeout(r, 400));
-    setActiveAgentLog("All claims verified ✓");
-    await new Promise((r) => setTimeout(r, 300));
+    setActiveAgentLog("Fact-checking against knowledge base & formatting...");
+    await new Promise((r) => setTimeout(r, 350));
   };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const userMsg: Message = { role: "user", content: text.trim() };
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: text.trim(),
+    };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
@@ -161,11 +332,21 @@ export default function AskAI() {
 
       const data = await res.json();
       setAgentPhase("complete");
-      setActiveAgentLog("Response delivered");
-      await new Promise((r) => setTimeout(r, 500));
+      setActiveAgentLog("Response verified and delivered ✓");
+      await new Promise((r) => setTimeout(r, 400));
 
       const sources = inferSources(data.content);
-      setMessages((prev) => [...prev, { role: "assistant", content: data.content, sources }]);
+      const followUps = generateFollowUps(data.content);
+
+      const assistantMsg: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: data.content,
+        sources,
+        followUps,
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);
@@ -174,8 +355,18 @@ export default function AskAI() {
       setTimeout(() => {
         setAgentPhase("idle");
         setActiveAgentLog("");
-      }, 800);
+      }, 700);
     }
+  };
+
+  const handleCopy = (id: string, content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleFeedback = (id: string, type: "helpful" | "unhelpful") => {
+    setFeedbackMap((prev) => ({ ...prev, [id]: type }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -195,21 +386,76 @@ export default function AskAI() {
   };
 
   return (
-    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-24 px-6 py-28 sm:py-36">
+    <section id="ask" className="mx-auto max-w-[1200px] scroll-mt-24 px-4 sm:px-6 py-24 sm:py-36">
       {/* SECTION HEADER */}
-      <div className="mb-14">
-        <p className="text-sm font-medium tracking-wide text-accent">Autonomous AI Assistant</p>
-        <h2 className="mt-3 text-[clamp(2.25rem,5vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.03em]">
+      <div className="mb-10 sm:mb-14">
+        <p className="text-xs sm:text-sm font-medium tracking-wide text-accent">Autonomous AI Assistant</p>
+        <h2 className="mt-2 text-[clamp(2rem,5vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.03em]">
           Ask Subhani.
         </h2>
-        <p className="mt-4 max-w-[56ch] text-lg text-muted">
-          A 4-agent autonomous pipeline grounded in my résumé and case studies. Watch the agents work in real time.
+        <p className="mt-3 max-w-[56ch] text-base sm:text-lg text-muted">
+          A 4-agent autonomous pipeline grounded in my résumé, real codebases, and case studies. Ask anything about my stack, projects, or background.
         </p>
       </div>
 
+      {/* MOBILE COMPACT AGENT PIPELINE STRIP (Visible on mobile & tablet) */}
+      <div className="mb-6 block lg:hidden">
+        <div className="rounded-2xl border border-line bg-card p-3 shadow-sm">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[11px] font-semibold text-text flex items-center gap-1.5">
+              <Sparkles size={12} className="text-accent" /> 4-Agent Pipeline
+            </span>
+            <span className={`text-[10px] font-mono font-bold ${
+              agentPhase === "idle" ? "text-muted" : agentPhase === "complete" ? "text-emerald-400" : "text-accent"
+            }`}>
+              {agentPhase === "idle" ? "READY" : agentPhase === "complete" ? "VERIFIED ✓" : "EXECUTING..."}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1.5">
+            {agents.map((agent) => {
+              const status = getAgentStatus(agent.id);
+              const isActive = status === "active";
+              const isDone = status === "done";
+              const Icon = agent.icon;
+
+              return (
+                <div
+                  key={agent.id}
+                  className={`flex flex-col items-center justify-center rounded-xl p-2 text-center transition-all ${
+                    isActive
+                      ? "border border-accent/60 bg-accent/10"
+                      : isDone
+                      ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                      : "border border-line/60 bg-bg/50 text-muted"
+                  }`}
+                >
+                  {isActive ? (
+                    <Loader2 size={14} className="animate-spin text-accent" />
+                  ) : isDone ? (
+                    <CheckCircle2 size={14} className="text-emerald-400" />
+                  ) : (
+                    <Icon size={14} />
+                  )}
+                  <span className="mt-1 text-[10px] font-medium truncate w-full">
+                    {agent.name.split(" ")[0]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {activeAgentLog && (
+            <div className="mt-2 text-center font-mono text-[10px] text-accent truncate px-2 py-1 bg-accent/5 rounded-lg border border-accent/20">
+              <span className="animate-pulse">›</span> {activeAgentLog}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-12 gap-6">
-        {/* LEFT: AUTONOMOUS AGENT GRAPH */}
-        <div className="col-span-12 lg:col-span-4 space-y-4">
+        {/* DESKTOP LEFT: AUTONOMOUS AGENT GRAPH */}
+        <div className="hidden lg:block lg:col-span-4 space-y-4">
           {/* Agent Pipeline Card */}
           <div className="rounded-[28px] border border-line bg-card p-6 shadow-sm">
             <div className="flex items-center gap-2.5 mb-6">
@@ -232,7 +478,6 @@ export default function AskAI() {
 
                 return (
                   <div key={agent.id}>
-                    {/* Agent Node */}
                     <div
                       className={`relative rounded-2xl border p-3.5 transition-all duration-500 ${
                         isActive
@@ -243,7 +488,6 @@ export default function AskAI() {
                       }`}
                       style={{ "--agent-color": agent.color } as React.CSSProperties}
                     >
-                      {/* Active pulse ring */}
                       {isActive && (
                         <div className="absolute -inset-px rounded-2xl animate-pulse opacity-30" style={{ border: `1px solid ${agent.color}` }} />
                       )}
@@ -285,7 +529,6 @@ export default function AskAI() {
                         </div>
                       </div>
 
-                      {/* Active Agent Log */}
                       {isActive && activeAgentLog && (
                         <div className="mt-2.5 rounded-lg bg-bg/80 px-3 py-2 font-mono text-[10px] border border-line/50" style={{ color: agent.color }}>
                           <span className="animate-pulse">›</span> {activeAgentLog}
@@ -293,10 +536,9 @@ export default function AskAI() {
                       )}
                     </div>
 
-                    {/* Connection Line */}
                     {idx < agents.length - 1 && (
                       <div className="flex justify-center py-1">
-                        <div className={`w-px h-4 transition-colors duration-500 ${isDone ? "bg-emerald-500/50" : "bg-line"}`} />
+                        <div className={`w-px h-3.5 transition-colors duration-500 ${isDone ? "bg-emerald-500/50" : "bg-line"}`} />
                       </div>
                     )}
                   </div>
@@ -319,7 +561,7 @@ export default function AskAI() {
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
-                      width: agentPhase === "intake" ? "20%" : agentPhase === "retrieval" ? "45%" : agentPhase === "reasoning" ? "70%" : "90%",
+                      width: agentPhase === "intake" ? "25%" : agentPhase === "retrieval" ? "50%" : agentPhase === "reasoning" ? "75%" : "95%",
                       background: `linear-gradient(90deg, #0a84ff, #bf5af2, #ff9f0a, #30d158)`,
                     }}
                   />
@@ -328,16 +570,16 @@ export default function AskAI() {
             </div>
           </div>
 
-          {/* Quick Prompts — Desktop Only */}
-          <div className="hidden lg:block rounded-[28px] border border-line bg-card p-5 shadow-sm">
-            <p className="text-xs font-semibold text-text mb-3">Try asking</p>
-            <div className="space-y-2">
-              {suggestedPrompts.slice(0, 4).map((prompt) => (
+          {/* Quick Prompts — Desktop */}
+          <div className="rounded-[28px] border border-line bg-card p-5 shadow-sm">
+            <p className="text-xs font-semibold text-text mb-3">Suggested Topics</p>
+            <div className="space-y-1.5">
+              {starterPrompts.slice(0, 4).map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => sendMessage(prompt)}
                   disabled={isLoading}
-                  className="w-full text-left rounded-xl border border-line bg-bg px-3.5 py-2.5 text-xs text-muted hover:text-text hover:border-accent/40 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full text-left rounded-xl border border-line bg-bg px-3.5 py-2 text-xs text-muted hover:text-text hover:border-accent/40 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {prompt}
                 </button>
@@ -346,11 +588,11 @@ export default function AskAI() {
           </div>
         </div>
 
-        {/* RIGHT: CHAT PANEL */}
+        {/* CHAT PANEL (Full width on mobile, 8-cols on desktop) */}
         <div className="col-span-12 lg:col-span-8">
-          <div className="rounded-[28px] border border-line bg-card shadow-sm overflow-hidden flex flex-col" style={{ height: "640px" }}>
+          <div className="rounded-[24px] sm:rounded-[28px] border border-line bg-card shadow-sm overflow-hidden flex flex-col h-[580px] sm:h-[650px]">
             {/* Chat Header */}
-            <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+            <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/80 backdrop-blur-sm">
               <div className="flex items-center gap-2.5">
                 <div className="relative">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
@@ -359,9 +601,9 @@ export default function AskAI() {
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-card" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-text">Subhani&apos;s AI Assistant</div>
-                  <div className="text-[11px] text-muted">
-                    4 autonomous agents · Knowledge-grounded · Gemini
+                  <div className="text-xs sm:text-sm font-semibold text-text">Subhani&apos;s AI Assistant</div>
+                  <div className="text-[10px] sm:text-[11px] text-muted">
+                    4 autonomous agents · Grounded in résumé · Gemini Flash
                   </div>
                 </div>
               </div>
@@ -370,36 +612,36 @@ export default function AskAI() {
                   onClick={() => { setMessages([]); setError(null); }}
                   className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-muted hover:text-text hover:border-accent/40 transition-colors cursor-pointer"
                 >
-                  Clear
+                  Clear Chat
                 </button>
               )}
             </div>
 
             {/* Messages Area */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-5">
               {messages.length === 0 && !isLoading && (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-5">
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-2">
                   <div className="relative">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 via-purple-500/10 to-emerald-500/10 text-accent">
-                      <Sparkles size={28} />
+                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 via-purple-500/10 to-emerald-500/10 text-accent">
+                      <Sparkles size={26} />
                     </div>
                     <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-emerald-400 flex items-center justify-center">
                       <Zap size={10} className="text-white" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <p className="text-lg font-semibold text-text">Hi! I&apos;m Subhani&apos;s autonomous AI.</p>
-                    <p className="text-sm text-muted max-w-[44ch]">
-                      I run a 4-agent pipeline (Intake → Retrieval → Reasoning → Grounding) to answer questions about his work. Every answer is fact-checked against his résumé.
+                    <p className="text-base sm:text-lg font-semibold text-text">Hi! I&apos;m Subhani&apos;s autonomous AI.</p>
+                    <p className="text-xs sm:text-sm text-muted max-w-[44ch]">
+                      I run a 4-agent pipeline to answer questions about his AI-SDE experience, projects, and stack with fact-checked grounding.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {suggestedPrompts.map((prompt) => (
+                  <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 max-w-lg pt-2">
+                    {starterPrompts.map((prompt) => (
                       <button
                         key={prompt}
                         onClick={() => sendMessage(prompt)}
-                        className="rounded-full border border-line bg-bg px-3.5 py-2 text-xs text-muted font-medium hover:border-accent/40 hover:text-text transition-all cursor-pointer"
+                        className="rounded-full border border-line bg-bg px-3 py-1.5 text-xs text-muted font-medium hover:border-accent/40 hover:text-text transition-all cursor-pointer"
                       >
                         {prompt}
                       </button>
@@ -408,45 +650,127 @@ export default function AskAI() {
                 </div>
               )}
 
-              {messages.map((msg, i) => (
+              {messages.map((msg) => (
                 <div
-                  key={i}
-                  className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  key={msg.id}
+                  className={`flex gap-2.5 sm:gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5">
                       <Bot size={15} />
                     </div>
                   )}
+
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    className={`max-w-[90%] sm:max-w-[84%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm shadow-sm ${
                       msg.role === "user"
-                        ? "bg-accent text-white rounded-br-lg"
-                        : "bg-bg border border-line text-text rounded-bl-lg"
+                        ? "bg-accent text-white rounded-br-md"
+                        : "bg-bg border border-line text-text rounded-bl-md"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {/* Message Body with Rich Formatting */}
+                    {msg.role === "assistant" ? (
+                      <FormattedContent text={msg.content} />
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    )}
 
-                    {/* Source Attribution for AI messages */}
-                    {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-line/50 space-y-2">
-                        <div className="flex items-center gap-1.5">
-                          <Shield size={10} className="text-emerald-400" />
-                          <span className="text-[10px] font-semibold text-emerald-400">Grounded & Verified</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {msg.sources.map((src) => (
-                            <span
-                              key={src}
-                              className="inline-flex items-center gap-1 rounded-md bg-emerald-500/8 border border-emerald-500/20 px-2 py-0.5 text-[9px] text-emerald-400 font-mono"
-                            >
-                              <Database size={8} /> {src}
+                    {/* Assistant Metadata & Source Badges */}
+                    {msg.role === "assistant" && (
+                      <div className="mt-3.5 pt-3 border-t border-line/60 space-y-2.5">
+                        {/* Source badges */}
+                        {msg.sources && msg.sources.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 mr-1">
+                              <Shield size={11} /> Grounded in:
                             </span>
-                          ))}
+                            {msg.sources.map((src) => (
+                              <span
+                                key={src}
+                                className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] text-emerald-400 font-mono"
+                              >
+                                <Database size={9} /> {src}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Interactive Feedback & Copy Bar */}
+                        <div className="flex items-center justify-between pt-1 text-[11px] text-muted">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px]">Helpful?</span>
+                            <button
+                              onClick={() => handleFeedback(msg.id, "helpful")}
+                              className={`p-1 rounded-md transition-colors cursor-pointer ${
+                                feedbackMap[msg.id] === "helpful"
+                                  ? "text-emerald-400 bg-emerald-500/10"
+                                  : "hover:text-text"
+                              }`}
+                              title="Helpful"
+                              aria-label="Thumbs up"
+                            >
+                              <ThumbsUp size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleFeedback(msg.id, "unhelpful")}
+                              className={`p-1 rounded-md transition-colors cursor-pointer ${
+                                feedbackMap[msg.id] === "unhelpful"
+                                  ? "text-red-400 bg-red-500/10"
+                                  : "hover:text-text"
+                              }`}
+                              title="Not helpful"
+                              aria-label="Thumbs down"
+                            >
+                              <ThumbsDown size={12} />
+                            </button>
+                            {feedbackMap[msg.id] && (
+                              <span className="text-[9px] text-emerald-400 font-medium">
+                                Thanks for feedback! ✨
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => handleCopy(msg.id, msg.content)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-card hover:text-text transition-colors cursor-pointer text-[10px]"
+                          >
+                            {copiedId === msg.id ? (
+                              <>
+                                <Check size={11} className="text-emerald-400" /> Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={11} /> Copy
+                              </>
+                            )}
+                          </button>
                         </div>
+
+                        {/* Suggested Follow-Up Questions ("Giving question after response") */}
+                        {msg.followUps && msg.followUps.length > 0 && (
+                          <div className="pt-2 border-t border-line/40">
+                            <p className="text-[10px] font-semibold text-muted mb-1.5 flex items-center gap-1">
+                              <HelpCircle size={10} className="text-accent" /> Suggested follow-ups:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {msg.followUps.map((q) => (
+                                <button
+                                  key={q}
+                                  onClick={() => sendMessage(q)}
+                                  disabled={isLoading}
+                                  className="inline-flex items-center gap-1 rounded-full border border-line bg-card/80 px-2.5 py-1 text-[10px] sm:text-[11px] text-muted hover:text-text hover:border-accent/40 hover:bg-accent/5 transition-all cursor-pointer text-left disabled:opacity-50"
+                                >
+                                  <span>{q}</span>
+                                  <ArrowRight size={9} className="text-accent shrink-0" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+
                   {msg.role === "user" && (
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-text/10 text-text mt-0.5">
                       <User size={15} />
@@ -455,44 +779,47 @@ export default function AskAI() {
                 </div>
               ))}
 
-              {/* Loading: Show active agent */}
+              {/* Real-time Agent Execution State */}
               {isLoading && !error && (
-                <div className="flex gap-3">
+                <div className="flex gap-2.5 sm:gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent mt-0.5">
                     <Bot size={15} />
                   </div>
-                  <div className="rounded-2xl rounded-bl-lg bg-bg border border-line px-4 py-3 space-y-2 min-w-[220px]">
-                    <div className="flex items-center gap-2 text-sm">
+                  <div className="rounded-2xl rounded-bl-md bg-bg border border-line p-3.5 sm:p-4 space-y-2.5 min-w-[240px] max-w-[85%]">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm">
                       <Loader2 size={14} className="animate-spin text-accent" />
-                      <span className="text-muted font-medium">
+                      <span className="text-text font-medium">
                         {agentPhase === "intake" && "Intake Agent parsing query..."}
-                        {agentPhase === "retrieval" && "Retrieval Agent searching..."}
+                        {agentPhase === "retrieval" && "Retrieval Agent scanning résumé..."}
                         {agentPhase === "reasoning" && "Reasoning Agent synthesizing..."}
-                        {agentPhase === "grounding" && "Grounding Agent verifying..."}
+                        {agentPhase === "grounding" && "Grounding Agent fact-checking..."}
                         {agentPhase === "complete" && "Delivering response..."}
                       </span>
                     </div>
-                    {/* Progress */}
+
+                    {/* Multi-agent visual progress bar */}
                     <div className="h-1.5 w-full rounded-full bg-line overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{
-                          width: agentPhase === "intake" ? "20%" : agentPhase === "retrieval" ? "45%" : agentPhase === "reasoning" ? "70%" : agentPhase === "grounding" ? "90%" : "100%",
+                          width: agentPhase === "intake" ? "25%" : agentPhase === "retrieval" ? "50%" : agentPhase === "reasoning" ? "75%" : agentPhase === "grounding" ? "90%" : "100%",
                           background: `linear-gradient(90deg, #0a84ff, #bf5af2, #ff9f0a, #30d158)`,
                         }}
                       />
                     </div>
-                    <div className="font-mono text-[10px] text-muted">{activeAgentLog}</div>
+                    <div className="font-mono text-[10px] text-muted truncate">
+                      {activeAgentLog || "Agents coordinating..."}
+                    </div>
                   </div>
                 </div>
               )}
 
               {error && (
-                <div className="flex gap-3">
+                <div className="flex gap-2.5 sm:gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400 mt-0.5">
                     <X size={15} />
                   </div>
-                  <div className="rounded-2xl rounded-bl-lg bg-red-500/5 border border-red-500/20 px-4 py-3 text-sm text-red-400 max-w-[80%]">
+                  <div className="rounded-2xl rounded-bl-md bg-red-500/5 border border-red-500/20 p-3.5 text-xs sm:text-sm text-red-400 max-w-[85%]">
                     <p>{error}</p>
                     <button onClick={() => setError(null)} className="mt-2 text-xs underline hover:text-red-300 cursor-pointer">
                       Dismiss
@@ -503,19 +830,19 @@ export default function AskAI() {
             </div>
 
             {/* Input bar */}
-            <form onSubmit={handleSubmit} className="border-t border-line px-4 py-3 flex items-center gap-3">
+            <form onSubmit={handleSubmit} className="border-t border-line p-3 sm:p-4 flex items-center gap-2 sm:gap-3 bg-card/60 backdrop-blur-sm">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about projects, stack, experience..."
                 disabled={isLoading}
-                className="flex-1 bg-transparent text-sm text-text outline-none placeholder:text-muted disabled:opacity-50"
+                className="flex-1 bg-transparent px-2 py-1 text-xs sm:text-sm text-text outline-none placeholder:text-muted disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="rounded-full bg-accent p-2.5 text-white transition-all hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                className="rounded-full bg-accent p-2.5 text-white transition-all hover:opacity-90 disabled:opacity-30 cursor-pointer shrink-0"
                 aria-label="Send message"
               >
                 <Send size={14} />
