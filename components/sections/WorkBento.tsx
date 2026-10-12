@@ -34,7 +34,7 @@ export default function WorkBento() {
           Engineered to ship.
         </h2>
         <p className="mt-4 max-w-[56ch] text-lg text-muted">
-          Autonomous multi-agent systems, sub-100 ms graph traversals, and hybrid RAG pipelines running in production.
+          Autonomous multi-agent systems, sub-100 ms graph traversals, and hybrid RAG pipelines engineered with production patterns.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export default function WorkBento() {
                       </div>
                       <div className="flex items-center justify-between rounded-lg bg-card/60 p-2 text-[11px] text-muted">
                         <span>Cyclic Checkpoints: active</span>
-                        <span className="text-emerald-400 font-semibold">Zero Dropped Runs</span>
+                        <span className="text-emerald-400 font-semibold">Persistent State</span>
                       </div>
                     </div>
                   )}
@@ -116,7 +116,7 @@ export default function WorkBento() {
                       <div className="rounded-lg bg-card p-2.5 text-[11px] text-muted space-y-1">
                         <div>&bull; PyMuPDF + Gemini Vision OCR</div>
                         <div>&bull; Qdrant Dense + BM25 Hybrid</div>
-                        <div className="text-text font-semibold">&bull; 100% CBSE Blueprint Adherence</div>
+                        <div className="text-text font-semibold">&bull; CBSE Blueprint Conformance</div>
                       </div>
                     </div>
                   )}
@@ -139,10 +139,10 @@ export default function WorkBento() {
                     <div className="space-y-2 font-mono text-xs">
                       <div className="flex items-center justify-between text-[11px] text-muted">
                         <span className="text-accent">VGG16 Deep Features</span>
-                        <span className="text-emerald-400">&lt; 15 ms Cosine Calc</span>
+                        <span className="text-emerald-400">Sub-Second Cosine Calc</span>
                       </div>
                       <div className="rounded-lg bg-card p-2.5 text-[11px] text-muted flex items-center justify-between">
-                        <span>512-dim Conv Vectors</span>
+                        <span>Deep Feature Embeddings</span>
                         <span className="text-text font-semibold">Top-4 Nearest Items</span>
                       </div>
                     </div>

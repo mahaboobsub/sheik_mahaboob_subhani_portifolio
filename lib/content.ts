@@ -4,21 +4,18 @@ export const profile = {
   name: "Sheik Mahaboob Subhani",
   role: "AI-SDE · AI & Full Stack Developer",
   location: "Bhimavaram, Andhra Pradesh, India",
-  phone: "+91 7075899966",
+  phone: "Available upon request",
   email: "skmahaboobsubhani62@gmail.com",
   github: "https://github.com/mahaboobsub",
   linkedin: "https://linkedin.com/in/sheik-mahaboob-subhani",
   headline: "I build AI systems that ship.",
-  sub: "RAG pipelines, agentic workflows and full-stack products — from CBSE exam generation in under 10 seconds to emergency donor matching in 100 ms.",
+  sub: "AI-SDE specializing in multi-agent workflows, production RAG, and full-stack platforms. Proven track record from sub-10 second CBSE exam generation at Ruvinsys to sub-100 ms emergency donor matching.",
   specialties: "AI-SDE specializing in RAG, Knowledge Graphs, LangGraph Agents, Autonomous Pipelines, FastAPI & Node.js.",
 };
 
 export const nav = [
   { label: "Work", href: "#work" },
-  { label: "How I Build", href: "#how-i-build" },
   { label: "Experience", href: "#experience" },
-  { label: "Skills", href: "#skills" },
-  { label: "Education", href: "#education" },
   { label: "Ask AI", href: "#ask" },
   { label: "Contact", href: "#contact" },
 ];
@@ -37,28 +34,28 @@ export const examAgents = [
     name: "Blueprint Planner",
     role: "Curriculum & Weightage Parser",
     description: "Parses official CBSE blueprint specifications, calculating chapter weightage, section taxonomy, and question mark distribution.",
-    latency: "1.2s",
+    latency: "Stage 1",
   },
   {
     id: "retriever",
     name: "Hybrid Retriever",
     role: "Vector + BM25 Search Engine",
     description: "Executes hybrid retrieval over PyMuPDF and Gemini Vision OCR extracted textbook chunks, combining dense embeddings with sparse keyword scoring.",
-    latency: "2.1s",
+    latency: "Stage 2",
   },
   {
     id: "generator",
     name: "Question Generator",
     role: "Difficulty-Calibrated Generator",
     description: "Synthesizes multi-format questions (MCQ, short, long, case-based) alongside precise marking schemes and step-by-step scoring keys.",
-    latency: "3.4s",
+    latency: "Stage 3",
   },
   {
     id: "reviewer",
     name: "Compliance Reviewer",
     role: "CBSE & Bloom's Taxonomy Auditor",
     description: "Evaluates generated items against CBSE syllabus guidelines, Bloom's cognitive taxonomy, mark allocation, and difficulty distribution.",
-    latency: "1.8s",
+    latency: "Stage 4",
   },
 ];
 
@@ -82,9 +79,9 @@ export const howIBuildChapters = [
       "Ingesting textbooks containing mathematical formulas, chemical equations, and structural diagrams using PyMuPDF and Gemini Vision OCR. Chunks are embedded and stored in Qdrant with hybrid dense-sparse indices for high-precision retrieval.",
     pills: ["PyMuPDF", "Gemini Vision OCR", "Qdrant", "Dense + BM25", "Chunk Re-ranking"],
     stats: [
-      { label: "Extraction accuracy", value: "99.2%" },
-      { label: "Vector dimension", value: "1536" },
-      { label: "Hybrid latency", value: "48ms" },
+      { label: "Extraction engine", value: "PyMuPDF + OCR" },
+      { label: "Index strategy", value: "Dense + BM25" },
+      { label: "Exam pipeline", value: "< 10 s" },
     ],
   },
   {
@@ -98,8 +95,8 @@ export const howIBuildChapters = [
     pills: ["LangGraph", "FastAPI Async", "Stateful Checkpoints", "Cyclic Graph", "Autonomous Verification"],
     stats: [
       { label: "Graph nodes", value: "14 nodes" },
-      { label: "Exam pipeline", value: "< 10s" },
-      { label: "Autonomous retry", value: "Zero human loop" },
+      { label: "Exam pipeline", value: "< 10 s" },
+      { label: "State machine", value: "Cyclic retry" },
     ],
   },
   {
@@ -107,13 +104,13 @@ export const howIBuildChapters = [
     id: "ship",
     tag: "Production Delivery",
     title: "Ship",
-    headline: "Production APIs with sub-100 ms execution.",
+    headline: "High-performance APIs with sub-100 ms execution.",
     description:
       "High-throughput FastAPI backends paired with Node.js and Prisma database layers. Real-time WebSocket event buses push execution state directly to client dashboards while Neo4j graph queries deliver donor matches in 100 ms.",
     pills: ["FastAPI", "Node.js / Express", "Prisma", "Neo4j Graph", "WebSocket Bus", "DPDP Act 2023"],
     stats: [
       { label: "Graph matching", value: "100 ms" },
-      { label: "WebSocket latency", value: "< 15 ms" },
+      { label: "Compatibility", value: "8 antigens" },
       { label: "Compliance", value: "DPDP 2023" },
     ],
   },
@@ -345,10 +342,10 @@ export const projects: ProjectItem[] = [
       },
     ],
     results: [
-      { metric: "< 10 s", label: "End-to-End Latency", context: "Complete CBSE paper generation" },
-      { metric: "99.2%", label: "OCR Fidelity", context: "Mathematical formula and diagram parsing" },
-      { metric: "4 Agents", label: "Specialized Roles", context: "Concurrent asynchronous pipeline" },
-      { metric: "100%", label: "CBSE Compliance", context: "Blueprint syllabus adherence" },
+      { metric: "< 10 s", label: "Generation SLA", context: "Complete CBSE paper generation" },
+      { metric: "PyMuPDF + OCR", label: "Formula Extraction", context: "Mathematical and diagram parsing" },
+      { metric: "4 Agents", label: "Pipeline Stages", context: "Planner, Retriever, Generator, Reviewer" },
+      { metric: "Hybrid RAG", label: "Retrieval Strategy", context: "Dense Qdrant + Sparse BM25" },
     ],
     stack: ["FastAPI", "Python", "Gemini Vision OCR", "PyMuPDF", "Qdrant", "Node.js", "Prisma", "Docker"],
     links: {
@@ -394,13 +391,13 @@ export const projects: ProjectItem[] = [
       {
         title: "Pre-computed Embedding Matrix",
         rationale:
-          "Pre-calculating and caching catalog feature vectors allows query-time similarity matching to execute in under 15 ms on CPU without GPU overhead.",
+          "Pre-calculating and caching catalog feature vectors allows query-time similarity matching to execute efficiently on CPU without GPU overhead.",
       },
     ],
     results: [
-      { metric: "< 15 ms", label: "Search Latency", context: "Cosine similarity calculation on CPU" },
-      { metric: "512-dim", label: "Feature Embeddings", context: "Deep convolutional representations" },
-      { metric: "Top 4", label: "Recommended Items", context: "Stylistically coherent apparel matches" },
+      { metric: "Sub-Second", label: "Query Inference", context: "Pre-computed matrix lookup on CPU" },
+      { metric: "VGG16 CNN", label: "Transfer Learning", context: "Pre-trained visual representations" },
+      { metric: "Top-4", label: "Matches Returned", context: "Visually coherent apparel recommendations" },
     ],
     stack: ["Python", "TensorFlow", "Keras", "VGG16", "NumPy", "Scikit-Learn", "Streamlit"],
     links: {

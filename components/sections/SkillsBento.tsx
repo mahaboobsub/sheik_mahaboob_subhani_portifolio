@@ -98,18 +98,32 @@ export default function SkillsBento() {
           </div>
 
           {/* Marquee Container */}
-          <div className="mt-6 overflow-hidden rounded-2xl border border-line/60 bg-bg/50 py-3">
+          <div className="mt-6 overflow-hidden rounded-2xl border border-line/60 bg-bg/50 py-3" aria-label="Languages and competencies">
             <div className="animate-marquee gap-4 flex items-center">
-              {[...skillsBento.languages.items, ...skillsBento.languages.items].map((item, idx) => (
-                <div
-                  key={`${item.name}-${idx}`}
-                  className="flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-xs font-medium text-text whitespace-nowrap"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  <span className="font-semibold">{item.name}</span>
-                  <span className="text-muted font-normal">&bull; {item.role}</span>
-                </div>
-              ))}
+              <div className="flex gap-4 items-center shrink-0">
+                {skillsBento.languages.items.map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-xs font-medium text-text whitespace-nowrap"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    <span className="font-semibold">{item.name}</span>
+                    <span className="text-muted font-normal">&bull; {item.role}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-4 items-center shrink-0" aria-hidden="true">
+                {skillsBento.languages.items.map((item) => (
+                  <div
+                    key={`clone-${item.name}`}
+                    className="flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-xs font-medium text-text whitespace-nowrap"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    <span className="font-semibold">{item.name}</span>
+                    <span className="text-muted font-normal">&bull; {item.role}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -152,8 +166,8 @@ export default function SkillsBento() {
 
           <div className="mt-6 flex items-center justify-between border-t border-line pt-4 text-xs">
             <span className="text-muted">Issuer: {skillsBento.certification.issuer}</span>
-            <span className="inline-flex items-center gap-1 font-medium text-accent">
-              Verified Credential
+            <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+              OCI 2025 Certified
             </span>
           </div>
         </div>
@@ -392,7 +406,7 @@ export default function SkillsBento() {
           </div>
 
           <div className="mt-5 flex items-center justify-between border-t border-line pt-3 text-xs">
-            <span className="text-muted">Revalidated every 6 hours</span>
+            <span className="text-muted">Public Repositories &bull; Active OSS</span>
             <a
               href={skillsBento.github.url}
               target="_blank"

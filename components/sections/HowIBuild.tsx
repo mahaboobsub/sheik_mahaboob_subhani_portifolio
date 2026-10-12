@@ -30,15 +30,7 @@ export default function HowIBuild() {
   const [selectedAgent, setSelectedAgent] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
-  const [liveLatency, setLiveLatency] = useState(94);
-
-  // Live jitter effect for latency meter to give authentic production feel
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLiveLatency(Math.floor(92 + Math.random() * 8));
-    }, 2400);
-    return () => clearInterval(timer);
-  }, []);
+  const [liveLatency] = useState(100);
 
   useEffect(() => {
     const checkMedia = () => {
@@ -187,6 +179,14 @@ export default function HowIBuild() {
             {/* RIGHT COLUMN: DYNAMIC MORPHING VISUAL */}
             <div className="col-span-7">
               <div className="relative min-h-[560px] rounded-[28px] border border-line bg-card p-6 shadow-2xl transition-all duration-500 overflow-hidden">
+                <div className="mb-4 flex items-center justify-between border-b border-line pb-2.5 text-[11px] text-muted">
+                  <span className="font-mono flex items-center gap-1.5">
+                    <Sparkles size={11} className="text-accent" /> Architecture &amp; Flow Simulation
+                  </span>
+                  <span className="rounded bg-bg border border-line px-2 py-0.5 font-mono text-[10px]">
+                    Illustrative Demo
+                  </span>
+                </div>
                 {activeChapter === 0 && <RetrieveVisual />}
                 {activeChapter === 1 && (
                   <ReasonVisual

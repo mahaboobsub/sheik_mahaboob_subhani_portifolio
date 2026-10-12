@@ -70,32 +70,54 @@ const agents = [
 ];
 
 const starterPrompts = [
+  "Why should we hire Subhani?",
   "What did you build at Ruvinsys?",
   "Explain BloodBridge's 14-node architecture",
-  "What are your technical skills?",
-  "Tell me about your experience",
-  "What is your education background?",
+  "What are your core technical skills?",
   "How does the CBSE exam pipeline work?",
+  "How can I contact or hire you?",
 ];
 
 // Infer sources from the AI response content
 function inferSources(content: string): string[] {
   const sources: string[] = [];
   const lower = content.toLowerCase();
-  if (lower.includes("ruvinsys") || lower.includes("exam") || lower.includes("cbse")) sources.push("Experience: Ruvinsys Global Solutions");
+  if (lower.includes("ruvinsys") || lower.includes("exam") || lower.includes("cbse") || lower.includes("blueprint")) sources.push("Experience: Ruvinsys Global Solutions");
   if (lower.includes("nit") || lower.includes("intern")) sources.push("Experience: NIT Andhra Pradesh");
-  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("antigen")) sources.push("Project: BloodBridge AI");
+  if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("antigen") || lower.includes("14-node")) sources.push("Project: BloodBridge AI");
   if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("cosine")) sources.push("Project: Fashion Recommender");
   if (lower.includes("password") || lower.includes("aes") || lower.includes("jwt")) sources.push("Project: Password Manager");
   if (lower.includes("education") || lower.includes("b.tech") || lower.includes("diploma") || lower.includes("dnr") || lower.includes("cgpa")) sources.push("Education Section");
-  if (lower.includes("fastapi") || lower.includes("python") || lower.includes("java") || lower.includes("node") || lower.includes("langgraph")) sources.push("Technical Skills");
+  if (lower.includes("fastapi") || lower.includes("python") || lower.includes("java") || lower.includes("node") || lower.includes("langgraph") || lower.includes("skill")) sources.push("Technical Skills");
   if (lower.includes("oracle") || lower.includes("certification") || lower.includes("hackathon") || lower.includes("250")) sources.push("Achievements & Certifications");
-  return sources.length > 0 ? sources : ["Résumé & Case Studies"];
+  if (lower.includes("skmahaboobsubhani62") || lower.includes("linkedin") || lower.includes("contact") || lower.includes("bhimavaram")) sources.push("Contact & Location");
+  return sources.length > 0 ? sources : ["Résumé & Portfolio"];
 }
 
 // Generate intelligent follow-up questions based on the response
 function generateFollowUps(content: string): string[] {
   const lower = content.toLowerCase();
+  if (lower.includes("why hire") || lower.includes("production-minded") || lower.includes("why should we hire")) {
+    return [
+      "Tell me about BloodBridge's 14-node architecture",
+      "What did you build at Ruvinsys?",
+      "How can I contact Subhani?",
+    ];
+  }
+  if (lower.includes("hello") || lower.includes("assistant") || lower.includes("explore first") || lower.includes("portfolio assistant")) {
+    return [
+      "Why should we hire Subhani?",
+      "What did you build at Ruvinsys?",
+      "What are your core technical skills?",
+    ];
+  }
+  if (lower.includes("contact") || lower.includes("skmahaboobsubhani62") || lower.includes("linkedin")) {
+    return [
+      "Why should we hire Subhani?",
+      "Tell me about BloodBridge AI",
+      "What is his education background?",
+    ];
+  }
   if (lower.includes("bloodbridge") || lower.includes("donor") || lower.includes("neo4j") || lower.includes("langgraph")) {
     return [
       "How does Neo4j calculate donor compatibility in <100ms?",
@@ -107,13 +129,13 @@ function generateFollowUps(content: string): string[] {
     return [
       "How does the hybrid retriever combine PyMuPDF and BM25?",
       "What were your exact contributions at Ruvinsys?",
-      "How are Bloom's taxonomy criteria audited?",
+      "How does the pipeline achieve <10s generation SLA?",
     ];
   }
   if (lower.includes("fashion") || lower.includes("vgg16") || lower.includes("recommender")) {
     return [
       "Why did you select VGG16 for feature extraction?",
-      "What is the average latency of cosine similarity search?",
+      "What is the latency of cosine similarity search?",
       "What other computer vision models have you worked with?",
     ];
   }
@@ -547,7 +569,7 @@ export default function AskAI() {
 
         {/* CHAT PANEL (Full width on mobile, 8-cols on desktop) */}
         <div className="col-span-12 lg:col-span-8">
-          <div className="rounded-[24px] sm:rounded-[28px] border border-line bg-card shadow-sm overflow-hidden flex flex-col h-[600px] sm:h-[660px]">
+          <div className="relative rounded-[24px] sm:rounded-[28px] border border-line/80 bg-card shadow-[0_4px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_30px_rgba(10,132,255,0.08)] overflow-hidden flex flex-col h-[600px] sm:h-[660px] transition-all duration-300 hover:border-accent/40">
             {/* Chat Header */}
             <div className="flex items-center justify-between border-b border-line px-4 sm:px-5 py-3.5 bg-card/90 backdrop-blur-sm">
               <div className="flex items-center gap-2.5">

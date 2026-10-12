@@ -64,9 +64,6 @@ export default function Hero() {
               <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/70 px-3 py-1.5">
                 <MapPin size={14} className="text-[#ff9f0a]" /> {profile.location}
               </span>
-              <a href={`tel:${profile.phone.replace(/\s+/g, '')}`} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors">
-                <Phone size={14} className="text-emerald-400" /> {profile.phone}
-              </a>
             </motion.div>
 
             {/* CTA Action Buttons */}

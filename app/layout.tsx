@@ -15,6 +15,12 @@ export const metadata: Metadata = {
     url: "https://mahaboobsubhani.vercel.app",
     siteName: "Sheik Mahaboob Subhani Portfolio",
     type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sheik Mahaboob Subhani | AI-SDE Portfolio",
+    description: "Autonomous multi-agent systems, sub-100ms Neo4j traversals, and full-stack production AI.",
   },
 };
 

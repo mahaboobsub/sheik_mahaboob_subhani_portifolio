@@ -5,7 +5,11 @@ import { experience } from "@/lib/content";
 import { Briefcase, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ExperienceTimeline() {
-  const [expandedIdx, setExpandedIdx] = useState<number>(0);
+  const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({ 0: true, 1: true });
+
+  const toggle = (idx: number) => {
+    setExpandedMap((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   return (
     <section id="experience" className="mx-auto max-w-[1200px] scroll-mt-24 px-6 py-28 sm:py-36">
@@ -27,7 +31,7 @@ export default function ExperienceTimeline() {
 
         <div className="space-y-8">
           {experience.map((exp, idx) => {
-            const isExpanded = expandedIdx === idx;
+            const isExpanded = expandedMap[idx] ?? true;
             return (
               <div key={exp.company} className="relative sm:pl-14">
                 {/* Dot on timeline */}
@@ -35,12 +39,14 @@ export default function ExperienceTimeline() {
                   <div className={`h-3 w-3 rounded-full border-2 ${idx === 0 ? "border-accent bg-accent" : "border-line bg-card"}`} />
                 </div>
 
-                <button
-                  onClick={() => setExpandedIdx(isExpanded ? -1 : idx)}
-                  className="w-full text-left rounded-[28px] border border-line bg-card p-6 sm:p-8 shadow-sm transition-all duration-300 hover:border-accent/40 cursor-pointer"
+                <div
+                  className="w-full text-left rounded-[28px] border border-line bg-card p-6 sm:p-8 shadow-sm transition-all duration-300 hover:border-accent/40"
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between gap-4">
+                  <div
+                    onClick={() => toggle(idx)}
+                    className="flex items-start justify-between gap-4 cursor-pointer select-none"
+                  >
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-xl font-semibold tracking-tight text-text sm:text-2xl">
@@ -85,7 +91,7 @@ export default function ExperienceTimeline() {
                       </div>
                     </div>
                   )}
-                </button>
+                </div>
               </div>
             );
           })}
