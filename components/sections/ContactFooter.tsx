@@ -9,6 +9,8 @@ export default function ContactFooter() {
   const [formState, setFormState] = useState<"idle" | "sending" | "sent">("idle");
   const [formData, setFormData] = useState({ name: "", email: "", message: "", honey: "" });
 
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
   const copyEmail = () => {
     navigator.clipboard.writeText(profile.email);
     setCopied(true);
@@ -18,12 +20,48 @@ export default function ContactFooter() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.honey) return; // honeypot
+
     setFormState("sending");
-    // Simulate send (replace with real Resend API call in Phase 8)
-    await new Promise((r) => setTimeout(r, 1200));
-    setFormState("sent");
-    setFormData({ name: "", email: "", message: "", honey: "" });
-    setTimeout(() => setFormState("idle"), 4000);
+    setStatusMessage(null);
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${profile.email}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          _subject: `🚀 Portfolio Message from ${formData.name}`,
+          _replyto: formData.email,
+          _template: "table",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message automatically.");
+      }
+
+      setFormState("sent");
+      setStatusMessage("Message sent! I have received your email and will get back to you shortly.");
+      setFormData({ name: "", email: "", message: "", honey: "" });
+      setTimeout(() => {
+        setFormState("idle");
+      }, 6000);
+    } catch {
+      // Fallback: If network or adblocker blocked formsubmit, open user's email client
+      setFormState("idle");
+      const mailtoUrl = `mailto:${profile.email}?subject=${encodeURIComponent(
+        `Portfolio Inquiry from ${formData.name}`
+      )}&body=${encodeURIComponent(
+        `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+      )}`;
+      window.location.href = mailtoUrl;
+      setStatusMessage("Opening your email client to send directly to skmahaboobsubhani62@gmail.com...");
+    }
   };
 
   return (
@@ -183,23 +221,44 @@ export default function ContactFooter() {
                 aria-hidden="true"
               />
 
-              <button
-                type="submit"
-                disabled={formState !== "idle"}
-                className="inline-flex items-center gap-2 rounded-full bg-text px-7 py-3 text-sm font-medium text-bg shadow-[0_0_40px_-8px_var(--accent)] transition-all hover:scale-[1.02] disabled:opacity-60"
-              >
-                {formState === "idle" && (
-                  <>
-                    Send Message <Send size={14} />
-                  </>
-                )}
-                {formState === "sending" && "Sending..."}
-                {formState === "sent" && (
-                  <>
-                    <Check size={14} className="text-emerald-400" /> Sent successfully
-                  </>
-                )}
-              </button>
+              {statusMessage && (
+                <div
+                  className={`rounded-xl p-3 text-xs sm:text-sm font-medium ${
+                    formState === "sent"
+                      ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                      : "bg-accent/10 border border-accent/30 text-accent"
+                  }`}
+                >
+                  {statusMessage}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="submit"
+                  disabled={formState !== "idle"}
+                  className="inline-flex items-center gap-2 rounded-full bg-text px-7 py-3 text-sm font-medium text-bg shadow-[0_0_40px_-8px_var(--accent)] transition-all hover:scale-[1.02] disabled:opacity-60 cursor-pointer"
+                >
+                  {formState === "idle" && (
+                    <>
+                      Send Message <Send size={14} />
+                    </>
+                  )}
+                  {formState === "sending" && "Sending to Subhani..."}
+                  {formState === "sent" && (
+                    <>
+                      <Check size={14} className="text-emerald-400" /> Sent to Inbox
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={`mailto:${profile.email}?subject=Portfolio%20Inquiry`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs text-muted hover:text-text transition-colors"
+                >
+                  <Mail size={13} /> Or open email app directly
+                </a>
+              </div>
             </form>
           </div>
         </div>
