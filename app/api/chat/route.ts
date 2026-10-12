@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }));
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.8-flash",
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.4,

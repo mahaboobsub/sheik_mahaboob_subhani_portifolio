@@ -25,15 +25,26 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
-          Open to developer roles
+          Open to developer roles · 2026
+        </motion.p>
+
+        <motion.p variants={rise} className="text-sm font-medium tracking-wide text-accent">
+          {profile.role}
         </motion.p>
 
         <motion.h1 variants={rise}
-          className="max-w-[14ch] text-[clamp(3rem,9vw,7.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]">
-          {profile.headline}
+          className="mt-3 text-[clamp(3rem,9vw,7.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]">
+          {profile.name.split(" ").slice(0, -1).join(" ")}{" "}
+          <span className="bg-gradient-to-r from-[#0a84ff] via-[#bf5af2] to-[#ff375f] bg-clip-text text-transparent">
+            {profile.name.split(" ").slice(-1)[0]}
+          </span>
         </motion.h1>
 
-        <motion.p variants={rise} className="mt-8 max-w-[52ch] text-xl text-muted">{profile.sub}</motion.p>
+        <motion.p variants={rise} className="mt-4 max-w-[20ch] text-[clamp(1.5rem,4vw,2.5rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-muted">
+          {profile.headline}
+        </motion.p>
+
+        <motion.p variants={rise} className="mt-6 max-w-[52ch] text-lg text-muted">{profile.sub}</motion.p>
 
         <motion.div variants={rise} className="mt-10 flex flex-wrap items-center gap-3">
           <a href="#work" className="rounded-full bg-text px-7 py-3.5 font-medium text-bg shadow-[0_0_40px_-8px_var(--accent)] transition-transform hover:scale-[1.03]">See my work</a>
