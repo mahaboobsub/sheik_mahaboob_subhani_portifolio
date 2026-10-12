@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "motion/react";
 import { pipelineLog, profile } from "@/lib/content";
+import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const list = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } } };
@@ -25,7 +26,7 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </span>
-          Open to developer roles · 2026
+          Open to AI-SDE &amp; Full Stack roles · 2026
         </motion.p>
 
         <motion.p variants={rise} className="text-sm font-medium tracking-wide text-accent">
@@ -46,10 +47,29 @@ export default function Hero() {
 
         <motion.p variants={rise} className="mt-6 max-w-[52ch] text-lg text-muted">{profile.sub}</motion.p>
 
-        <motion.div variants={rise} className="mt-10 flex flex-wrap items-center gap-3">
+        {/* Social / Contact Links */}
+        <motion.div variants={rise} className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted">
+          <a href={profile.github} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-text transition-colors">
+            <Github size={15} /> mahaboobsub
+          </a>
+          <a href={profile.linkedin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-text transition-colors">
+            <Linkedin size={15} /> LinkedIn
+          </a>
+          <a href={`mailto:${profile.email}`} className="inline-flex items-center gap-1.5 hover:text-text transition-colors">
+            <Mail size={15} /> {profile.email}
+          </a>
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin size={15} /> {profile.location}
+          </span>
+          <a href={`tel:${profile.phone}`} className="inline-flex items-center gap-1.5 hover:text-text transition-colors">
+            <Phone size={15} /> {profile.phone}
+          </a>
+        </motion.div>
+
+        <motion.div variants={rise} className="mt-8 flex flex-wrap items-center gap-3">
           <a href="#work" className="rounded-full bg-text px-7 py-3.5 font-medium text-bg shadow-[0_0_40px_-8px_var(--accent)] transition-transform hover:scale-[1.03]">See my work</a>
           <a href="#ask" className="glass rounded-full px-7 py-3.5 font-medium transition-transform hover:scale-[1.03]">Ask my AI</a>
-          <a href="/resume.pdf" className="px-3 py-3.5 text-muted underline-offset-4 hover:text-text hover:underline">Download résumé</a>
+          <a href="/resume.pdf" target="_blank" className="px-3 py-3.5 text-muted underline-offset-4 hover:text-text hover:underline">Download résumé</a>
         </motion.div>
 
         <motion.div variants={rise} aria-hidden

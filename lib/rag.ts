@@ -6,6 +6,7 @@ export const knowledgeBase = `
 Name: Sheik Mahaboob Subhani
 Role: AI-SDE (AI & Full Stack Developer)
 Location: Bhimavaram, Andhra Pradesh, India
+Phone: +91 7075899966
 Email: skmahaboobsubhani62@gmail.com
 GitHub: github.com/mahaboobsub
 LinkedIn: linkedin.com/in/sheik-mahaboob-subhani

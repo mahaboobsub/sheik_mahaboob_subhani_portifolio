@@ -3,20 +3,22 @@
 export const profile = {
   name: "Sheik Mahaboob Subhani",
   role: "AI-SDE · AI & Full Stack Developer",
-  location: "Andhra Pradesh, India",
+  location: "Bhimavaram, Andhra Pradesh, India",
+  phone: "+91 7075899966",
   email: "skmahaboobsubhani62@gmail.com",
   github: "https://github.com/mahaboobsub",
   linkedin: "https://linkedin.com/in/sheik-mahaboob-subhani",
   headline: "I build AI systems that ship.",
-  sub: "RAG pipelines, agentic workflows and full-stack products, from CBSE exam generation in under 10 seconds to donor matching in 100 ms.",
+  sub: "RAG pipelines, agentic workflows and full-stack products — from CBSE exam generation in under 10 seconds to emergency donor matching in 100 ms.",
   specialties: "AI-SDE specializing in RAG, Knowledge Graphs, LangGraph Agents, Autonomous Pipelines, FastAPI & Node.js.",
 };
 
 export const nav = [
   { label: "Work", href: "#work" },
   { label: "How I Build", href: "#how-i-build" },
-  { label: "Skills", href: "#skills" },
   { label: "Experience", href: "#experience" },
+  { label: "Skills", href: "#skills" },
+  { label: "Education", href: "#education" },
   { label: "Ask AI", href: "#ask" },
   { label: "Contact", href: "#contact" },
 ];
@@ -117,21 +119,21 @@ export const howIBuildChapters = [
   },
 ];
 
-// 6-Tile Bento Grid Skills Data
+// 6-Tile Bento Grid Skills Data (aligned with resume Technical Skills)
 export const skillsBento = {
   languages: {
     title: "Languages",
     subtitle: "Core algorithmic foundations & multi-paradigm programming",
     items: [
-      { name: "Python", role: "FastAPI, LangGraph, RAG, ML/DL" },
-      { name: "JavaScript", role: "Node.js, Express, Modern Async Web" },
       { name: "Java", role: "OOP, Enterprise Architecture, DSA" },
+      { name: "Python", role: "FastAPI, LangGraph, RAG, ML/DL" },
       { name: "SQL", role: "Complex Joins, Indexing, Schema Design" },
+      { name: "JavaScript", role: "Node.js, Express, Modern Async Web" },
     ],
   },
   aiData: {
     title: "AI & Data Systems",
-    subtitle: "End-to-end vector retrieval, graph traversal, and agentic workflows",
+    subtitle: "Core Concepts: OOP, DBMS, ML, DL, RAG — plus agentic workflows",
     tags: [
       { name: "RAG Pipelines", highlight: true },
       { name: "LangGraph", highlight: true },
@@ -141,7 +143,8 @@ export const skillsBento = {
       { name: "PyMuPDF", highlight: false },
       { name: "Machine Learning", highlight: false },
       { name: "Deep Learning (VGG16)", highlight: false },
-      { name: "MySQL", highlight: false },
+      { name: "OOP", highlight: false },
+      { name: "DBMS", highlight: false },
     ],
   },
   backend: {
@@ -155,12 +158,14 @@ export const skillsBento = {
     stack: ["FastAPI", "Node.js", "Express.js", "Prisma ORM", "REST APIs", "WebSockets"],
   },
   tools: {
-    title: "Engineering & Workflow",
-    subtitle: "Collaborative shipping and rigorous quality control",
+    title: "Tools & Databases",
+    subtitle: "Collaborative shipping, data persistence, and rigorous quality control",
     items: [
       { name: "Git", detail: "Branching workflows, trunk hygiene, semantic versions" },
       { name: "Postman", detail: "Comprehensive API contract testing & mock servers" },
       { name: "JIRA", detail: "Agile sprints, backlog management, incident tracking" },
+      { name: "MySQL", detail: "Relational data modeling, parameterized queries" },
+      { name: "Qdrant", detail: "Vector DB for hybrid dense + BM25 retrieval" },
     ],
   },
   certification: {

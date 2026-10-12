@@ -182,12 +182,26 @@ export default function WorkBento() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-line pt-4">
-                  <button
-                    onClick={() => setSelectedProject(proj)}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-text transition-colors hover:text-accent cursor-pointer"
-                  >
-                    Case study <ArrowRight size={14} />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedProject(proj)}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-text transition-colors hover:text-accent cursor-pointer"
+                    >
+                      Case study <ArrowRight size={14} />
+                    </button>
+
+                    {proj.links.github && (
+                      <a
+                        href={proj.links.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-text transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Github size={13} /> GitHub
+                      </a>
+                    )}
+                  </div>
 
                   <Link
                     href={`/work/${proj.slug}`}
